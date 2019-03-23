@@ -3,6 +3,7 @@
 #include "WebService.h"
 #include <signal.h>
 #include <stdlib.h>
+#include <thread>
 
 UA_Boolean running = true;
 static void stopHandler(int sig) {
@@ -399,13 +400,8 @@ int main() {
 		// Make sure that you only call any created method once in this loop.
 		requestCountries(server, webService);
 
-		/* Now we can use the max timeout to do something else. In this case, we
-		just sleep. (select is used as a platform-independent sleep
-		function.) */
-		struct timeval tv;
-		tv.tv_sec = 0;
-		tv.tv_usec = timeout * 1000;
-		select(0, NULL, NULL, NULL, &tv);
+		/* Now we can use the max timeout to do something else. In this case, we just sleep. */
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	retval = UA_Server_run_shutdown(server);
 	UA_Server_delete(server);
