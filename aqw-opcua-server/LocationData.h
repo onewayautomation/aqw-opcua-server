@@ -49,6 +49,8 @@ namespace weathersvr {
 		static const utility::string_t KEY_COORDINATES;
 		static const utility::string_t KEY_LATITUDE;
 		static const utility::string_t KEY_LONGITUDE;
+		static const short INVALID_LATITUDE;
+		static const short INVALID_LONGITUDE;
 
 		// C-Style String representing the browse/display name of the variables nodes in OPC UA.
 

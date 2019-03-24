@@ -22,6 +22,11 @@ Map these objects returned from the web service in OPC UA objects and put them a
 static void requestWeather(UA_Server *server, weathersvr::WebService *webService
 	, weathersvr::LocationData& location, UA_NodeId parentNodeId) {
 	try {
+		//Checks if the location has valid coordinates before proceeding further.
+		if (location.getLatitude() == weathersvr::LocationData::INVALID_LATITUDE
+			&& location.getLongitude() == weathersvr::LocationData::INVALID_LONGITUDE)
+			return;
+
 		// Creates and define the location attributes/variable node class
 		webService->fetchWeather(location.getLatitude(), location.getLongitude()).then([&](web::json::value response) {
 
@@ -175,23 +180,12 @@ static void requestWeather(UA_Server *server, weathersvr::WebService *webService
 				UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
 				UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_CLOUD_COVER),
 				UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), cloudCoverVarAttr, NULL, NULL);
-
-			/*std::cout << std::fixed << std::setprecision(6)
-				<< "Latitude: " << weatherData.getLatitude()
-				<< " / Longitude: " << weatherData.getLatitude()
-				<< " / Timezone: " << weatherData.getTimezone()
-				<< " / Summary: " << weatherData.getCurrentlyIcon()
-				<< " / Temperature: " << weatherData.getCurrentlyTemperature()
-				<< " / Apparent Temperature: " << weatherData.getCurrentlyApparentTemperature()
-				<< " / Humidity: " << weatherData.getCurrentlyHumidity()
-				<< " / Pressure: " << weatherData.getCurrentlyPressure()
-				<< " / Wind Speed: " << weatherData.getCurrentlyWindSpeed()
-				<< " / Cloud Cover: " << weatherData.getCurrentlyCloudCover()
-				<< std::endl;*/
 		}).wait();
-	} catch (...) {
+	} catch (const std::exception& e) {
 		UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-			"Error during request to the web service!");
+			"Error on requestWeather method!");
+		UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+			e.what());
 	}
 }
 
@@ -206,55 +200,45 @@ in this function. Locations will be added to it.
 */
 static void requestLocations(UA_Server *server, weathersvr::WebService *webService
 	, weathersvr::CountryData& country, UA_NodeId parentNodeId) {
-	// This will control how many times this method executes. It's to be executed ONLY ONCE!
-	static bool wasitCalled = false;
+	try {
+		std::vector<weathersvr::LocationData> allLocations;
+		webService->fetchAllLocations(country.getCode()).then([&](web::json::value response) {
+			allLocations = weathersvr::LocationData::parseJsonArray(response);
+			country.setLocations(allLocations);
 
-	// If was not executed yet, call the web request.
-	if (!wasitCalled) {
-		/* TODO: 
-		Setting to true avoid to be executed again. This needs to be removed after the tests are done. 
-		With this variable set to true here we only request all the locations and weather information for the first country.
-		*/
-		wasitCalled = true;
+			for (size_t i {0}; i < allLocations.size(); i++) {
+				std::string locationName = allLocations.at(i).getName();
+				std::string locationCity = allLocations.at(i).getCity();
+				std::string locationCountryCode = allLocations.at(i).getCountryCode();
+				double locationLatitude = allLocations.at(i).getLatitude();
+				double locationLongitude = allLocations.at(i).getLongitude();
+				/* Creates the identifier for the node id of the new Location object
+				The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
+				std::string countries {weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID};
+				std::string locationNameId =
+					static_cast<std::string>(weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID)
+					+ "." + locationCountryCode + "." + locationName;
+				/* Creates an Location object node containing all the weather information related to it. */
+				UA_NodeId locationObjId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
+					locationNameId.c_str());
+				UA_ObjectAttributes locationObjAttr = UA_ObjectAttributes_default;
+				char locale[] = "en-US";
+				char desc[] = "Location object containing weather information";
+				locationObjAttr.description = UA_LOCALIZEDTEXT(locale, desc);
+				locationObjAttr.displayName = UA_LOCALIZEDTEXT_ALLOC(locale, locationName.c_str());
+				UA_Server_addObjectNode(server, locationObjId, parentNodeId,
+					UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+					UA_QUALIFIEDNAME_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationName.c_str()),
+					UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), locationObjAttr, NULL, NULL);
 
-		try {
-			std::vector<weathersvr::LocationData> allLocations;
-			webService->fetchAllLocations(country.getCode()).then([&](web::json::value response) {
-				allLocations = weathersvr::LocationData::parseJsonArray(response);
-				country.setLocations(allLocations);
-
-				for (size_t i {0}; i < allLocations.size(); i++) {
-					std::string locationName = allLocations.at(i).getName();
-					std::string locationCity = allLocations.at(i).getCity();
-					std::string locationCountryCode = allLocations.at(i).getCountryCode();
-					double locationLatitude = allLocations.at(i).getLatitude();
-					double locationLongitude = allLocations.at(i).getLongitude();
-					/* Creates the identifier for the node id of the new Location object
-					The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
-					std::string countries {weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID};
-					std::string locationNameId =
-						static_cast<std::string>(weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID)
-						+ "." + locationCountryCode + "." + locationName;
-					/* Creates an Location object node containing all the weather information related to it. */
-					UA_NodeId locationObjId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
-						locationNameId.c_str());
-					UA_ObjectAttributes locationObjAttr = UA_ObjectAttributes_default;
-					char locale[] = "en-US";
-					char desc[] = "Location object containing weather information";
-					locationObjAttr.description = UA_LOCALIZEDTEXT(locale, desc);
-					locationObjAttr.displayName = UA_LOCALIZEDTEXT_ALLOC(locale, locationName.c_str());
-					UA_Server_addObjectNode(server, locationObjId, parentNodeId,
-						UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-						UA_QUALIFIEDNAME_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationName.c_str()),
-						UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), locationObjAttr, NULL, NULL);
-
-					requestWeather(server, webService, allLocations.at(i), locationObjId);
-				}
-			}).wait();
-		} catch (...) {
-			UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-				"Error during request to the web service!");
-		}
+				requestWeather(server, webService, allLocations.at(i), locationObjId);
+			}
+		}).wait();
+	} catch (const std::exception& e) {
+		UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+			"Error on requestLocations method!");
+		UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+			e.what());
 	}
 }
 
@@ -266,11 +250,11 @@ Map these objects returned from the web service in OPC UA objects and put them a
 */
 static void requestCountries(UA_Server *server, weathersvr::WebService *webService) {
 	// This will control how many times this method executes. It's to be executed ONLY ONCE!
-	static bool wasitCalled = false;
+	static bool wasItCalled = false;
 
 	// If was not executed yet, call the web request.
-	if (!wasitCalled) {
-		wasitCalled = true;
+	if (!wasItCalled) {
+		wasItCalled = true;
 
 		// Creates an Countries object node class of the folder type to organizes all the locations objects under it.
 		UA_NodeId countriesObjId = UA_NODEID_STRING(weathersvr::WebService::OPC_NS_INDEX,
@@ -292,7 +276,8 @@ static void requestCountries(UA_Server *server, weathersvr::WebService *webServi
 				allCountries = weathersvr::CountryData::parseJsonArray(response);
 				webService->setAllCountries(allCountries);
 
-				for (size_t i {0}; i < allCountries.size(); i++) {
+				// TODO: change the magic constant 2 to allCountries.size() in the loop condition if you want to download all the countries.
+				for (size_t i {0}; i < 2; i++) {
 					std::string countryName = allCountries.at(i).getName();
 					std::string countryCode = allCountries.at(i).getCode();
 					uint32_t countryCitiesNumber = allCountries.at(i).getCitiesNumber();
@@ -317,54 +302,65 @@ static void requestCountries(UA_Server *server, weathersvr::WebService *webServi
 
 					requestLocations(server, webService, allCountries.at(i), countryObjId);
 
+					std::string nameVarNameId = countryObjNameId + "." + weathersvr::CountryData::BROWSE_NAME;
+					UA_NodeId nameVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, nameVarNameId.c_str());
 					UA_VariableAttributes nameVarAttr = UA_VariableAttributes_default;
 					UA_String nameValue = UA_STRING_ALLOC(countryName.c_str());
 					UA_Variant_setScalar(&nameVarAttr.value, &nameValue, &UA_TYPES[UA_TYPES_STRING]);
 					char nameVarAttrDesc[] = "The name of a country";
 					nameVarAttr.description = UA_LOCALIZEDTEXT(locale, nameVarAttrDesc);
 					nameVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_NAME);
-					UA_Server_addVariableNode(server, UA_NODEID_NULL, countryObjId,
+					UA_Server_addVariableNode(server, nameVarNodeId, countryObjId,
 						UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
 						UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::CountryData::BROWSE_NAME),
 						UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), nameVarAttr, NULL, NULL);
 
+					std::string codeVarNameId = countryObjNameId + "." + weathersvr::CountryData::BROWSE_CODE;
+					UA_NodeId codeVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, codeVarNameId.c_str());
 					UA_VariableAttributes codeVarAttr = UA_VariableAttributes_default;
 					UA_String codeValue = UA_STRING_ALLOC(countryCode.c_str());
 					UA_Variant_setScalar(&codeVarAttr.value, &codeValue, &UA_TYPES[UA_TYPES_STRING]);
 					char codeVarAttrDesc[] = "2 letters ISO code representing the Country Name";
 					codeVarAttr.description = UA_LOCALIZEDTEXT(locale, codeVarAttrDesc);
 					codeVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_CODE);
-					UA_Server_addVariableNode(server, UA_NODEID_NULL, countryObjId,
+					UA_Server_addVariableNode(server, codeVarNodeId, countryObjId,
 						UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
 						UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::CountryData::BROWSE_CODE),
 						UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), codeVarAttr, NULL, NULL);
 
-					//UA_VariableAttributes citiesNumberVarAttr = UA_VariableAttributes_default;
-					//UA_UInt32 citiesNumberValue = countryCitiesNumber;
-					//UA_Variant_setScalar(&citiesNumberVarAttr.value, &citiesNumberValue, &UA_TYPES[UA_TYPES_UINT32]);
-					//char citiesNumberVarAttrDesc[] = "Number of cities belonged to a country. It can be city or province";
-					//citiesNumberVarAttr.description = UA_LOCALIZEDTEXT(locale, citiesNumberVarAttrDesc);
-					//citiesNumberVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_CITIES_NUMBER);
-					//UA_Server_addVariableNode(server, UA_NODEID_NULL, countryObjId,
-					//	UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
-					//	UA_QUALIFIEDNAME(1, weathersvr::CountryData::BROWSE_CITIES_NUMBER),
-					//	UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), citiesNumberVarAttr, NULL, NULL);
+					std::string citiesNumberVarNameId = countryObjNameId + "." + weathersvr::CountryData::BROWSE_CITIES_NUMBER;
+					UA_NodeId citiesNumberVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, citiesNumberVarNameId.c_str());
+					UA_VariableAttributes citiesNumberVarAttr = UA_VariableAttributes_default;
+					UA_UInt32 citiesNumberValue = countryCitiesNumber;
+					UA_Variant_setScalar(&citiesNumberVarAttr.value, &citiesNumberValue, &UA_TYPES[UA_TYPES_UINT32]);
+					char citiesNumberVarAttrDesc[] = "Number of cities belonged to a country. It can be city or province";
+					citiesNumberVarAttr.description = UA_LOCALIZEDTEXT(locale, citiesNumberVarAttrDesc);
+					citiesNumberVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_CITIES_NUMBER);
+					UA_Server_addVariableNode(server, citiesNumberVarNodeId, countryObjId,
+						UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+						UA_QUALIFIEDNAME(1, weathersvr::CountryData::BROWSE_CITIES_NUMBER),
+						UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), citiesNumberVarAttr, NULL, NULL);
 
-					//UA_VariableAttributes locationsNumberVarAttr = UA_VariableAttributes_default;
-					//UA_UInt32 locationsNumberValue = countryLocationsNumber;
-					//UA_Variant_setScalar(&locationsNumberVarAttr.value, &locationsNumberValue, &UA_TYPES[UA_TYPES_UINT32]);
-					//char locationsNumberVarAttrDesc[] = "Number of cities belonged to a country. It can be city or province";
-					//locationsNumberVarAttr.description = UA_LOCALIZEDTEXT(locale, locationsNumberVarAttrDesc);
-					//locationsNumberVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER);
-					//UA_Server_addVariableNode(server, UA_NODEID_NULL, countryObjId,
-					//	UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
-					//	UA_QUALIFIEDNAME(1, weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER),
-					//	UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), locationsNumberVarAttr, NULL, NULL);
+					std::string locationsNumberVarNameId = countryObjNameId + "." + weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER;
+					UA_NodeId locationsNumberVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
+						locationsNumberVarNameId.c_str());
+					UA_VariableAttributes locationsNumberVarAttr = UA_VariableAttributes_default;
+					UA_UInt32 locationsNumberValue = countryLocationsNumber;
+					UA_Variant_setScalar(&locationsNumberVarAttr.value, &locationsNumberValue, &UA_TYPES[UA_TYPES_UINT32]);
+					char locationsNumberVarAttrDesc[] = "Number of cities belonged to a country. It can be city or province";
+					locationsNumberVarAttr.description = UA_LOCALIZEDTEXT(locale, locationsNumberVarAttrDesc);
+					locationsNumberVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER);
+					UA_Server_addVariableNode(server, locationsNumberVarNodeId, countryObjId,
+						UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+						UA_QUALIFIEDNAME(1, weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER),
+						UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), locationsNumberVarAttr, NULL, NULL);
 				}
 			}).wait();
-		} catch (...) {
+		} catch (const std::exception& e) {
 			UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-				"Error during request to the web service!");
+				"Error on requestCountries method!");
+			UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+				e.what());
 		}
 	}
 }

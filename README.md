@@ -15,7 +15,10 @@ A demo OPC UA server application, **currently in development**, that fetches wea
 - To fetch weather data, you will use the API from [DarkSky API - Weather](https://darksky.net/dev). 
 	* If you do not already have an account, you will need to [create one](https://darksky.net/dev/register) in order to request an API Key.
 	* In `WebService.cpp` class implementation, replace the value of `WebService::KEY_API_DARKSKY` constant with your own API KEY that you received from your registration above.
-- There is only one `TODO` in the the project, in the `Application.cpp` source code, the `static bool wasitCalled` variable inside the method `requestLocations` is set to true temporarily. With this variable we limit the request of locations only for the first Country. As soon as a callback option is implemented, to detecte when the Client selects a specific Country-Location, this variable will be removed.
+- There is only one `TODO` in the the project, in the `Application.cpp` source code, the `for loop condition` inside the method `requestCountries` 
+is currently limited to request locations from only 2 countries. Both coutries have only a few locations, that means the request of weather for such 
+locations will not be a lot. If you want to request all the countries, change the `for loop condition` from `2` to	`allCountries.size()` **BUT IF 
+YOU DO THAT, BE AWARE THAT ALL THE COUNTRIES AND LOCATIONS WILL BE DOWNLOAD AND YOU MAY REACH THE LIMIT OF REQUESTS PER DAY FROM THE DARKSKY WEATHER API.**
 - Build & run!
 
 ## Project Overview
