@@ -12,9 +12,11 @@ const short LocationData::INVALID_LATITUDE = 91;
 const short LocationData::INVALID_LONGITUDE = 181;
 
 weathersvr::LocationData::LocationData(std::string name, std::string city, std::string countryCode,
-	double latitude, double longitude)
-	: name {name}, city {city}, countryCode {countryCode}, latitude {latitude}, longitude {longitude}
-{}
+	double latitude, double longitude, bool hasBeenReceivedWeatherData)
+	: name {name}, city {city}, countryCode {countryCode}, latitude {latitude}, longitude {longitude}, hasBeenReceivedWeatherData {hasBeenReceivedWeatherData}
+{
+	readLastTime = std::chrono::system_clock::now();
+}
 
 weathersvr::LocationData::LocationData(std::string name, std::string countryCode)
 	: LocationData {name, "", countryCode, INVALID_LATITUDE, INVALID_LONGITUDE}
@@ -55,6 +57,18 @@ std::vector<LocationData> LocationData::parseJsonArray(web::json::value& jsonArr
 	}
 
 	return vectorAllLocations;
+}
+
+void weathersvr::LocationData::setHasBeenReceivedWeatherData(const bool received) {
+	hasBeenReceivedWeatherData = received;
+}
+
+void weathersvr::LocationData::setWeatherData(const WeatherData weather) {
+	weatherData = weather;
+}
+
+void weathersvr::LocationData::setReadLastTime(const std::chrono::system_clock::time_point time) {
+	readLastTime = time;
 }
 
 bool weathersvr::LocationData::operator<(const LocationData& rhs) const {

@@ -32,6 +32,10 @@ weathersvr::WeatherData::WeatherData(double latitude, double longitude, std::str
 	humidity {humidity}, windSpeed {windSpeed}, cloudCover {cloudCover}
 {}
 
+weathersvr::WeatherData::WeatherData()
+	: WeatherData {0, 0, "", "", 0, 0, 0, 0, 0, 0}
+{}
+
 WeatherData weathersvr::WeatherData::parseJson(web::json::value & json) {
 	double latitude = json.at(KEY_LATITUDE).as_double();
 	double longitude = json.at(KEY_LONGITUDE).as_double();

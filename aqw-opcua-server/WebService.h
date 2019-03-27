@@ -51,6 +51,7 @@ namespace weathersvr {
 		static const std::string PARAM_VALUE_API_DARKSKY_MINUTELY;
 		static const std::string PARAM_VALUE_API_DARKSKY_HOURLY;
 		static const std::string PARAM_VALUE_API_DARKSKY_DAILY;
+		static const short INTERVAL_DOWNLOAD_WEATHER_DATA;
 
 		/* DarkSky URI example:
 		https://api.darksky.net/forecast/KEY/latitude,longitude?exclude=minutely,hourly,daily?units=si 

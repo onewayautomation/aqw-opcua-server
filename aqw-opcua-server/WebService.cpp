@@ -9,13 +9,16 @@ const utility::string_t WebService::PATH_API_OPENAQ_LOCATIONS = U("locations");
 const utility::string_t WebService::PATH_API_OPENAQ_MEASUREMENTS = U("measurements");
 const utility::string_t WebService::PARAM_API_OPENAQ_COUNTRY = U("country");
 
+// TODO: Replace the value of this constant with your DarkSky API Key
 const utility::string_t WebService::ENDPOINT_API_DARKSKY = U("https://api.darksky.net/forecast");
-const utility::string_t WebService::KEY_API_DARKSKY = U("77a9fc4f50e1783d5e8625d0339b68bf");
+const utility::string_t WebService::KEY_API_DARKSKY = U("");
 const utility::string_t WebService::PARAM_API_DARKSKY_EXCLUDE = U("exclude");
 const utility::string_t WebService::PARAM_API_DARKSKY_UNITS = U("units");
 const std::string WebService::PARAM_VALUE_API_DARKSKY_MINUTELY = "minutely";
 const std::string WebService::PARAM_VALUE_API_DARKSKY_HOURLY = "hourly";
 const std::string WebService::PARAM_VALUE_API_DARKSKY_DAILY = "daily";
+// TODO: Change the interval in minutes to control the download of weather data.
+const short WebService::INTERVAL_DOWNLOAD_WEATHER_DATA = 15;
 
 pplx::task<web::json::value> WebService::fetchAllCountries() {
 

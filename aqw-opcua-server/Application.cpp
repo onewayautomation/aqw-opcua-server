@@ -18,10 +18,71 @@ static void stopHandler(int sig) {
 }
 
 /*
+Update all the weather variables nodes of the location supplied by parameter from the web service.
+Map these objects returned from the web service in OPC UA objects and put them available in the address space.
+@param UA_DataValue *dataValue - The data value of the variable node that will be updated on OPC UA.
+@param const weathersvr::WeatherData& weatherData - The WeatherData object the data will be requested from.
+@param std::string weatherVariableName - The weather browse name to check which variable node to update.
+*/
+static void updateWeatherVariables(UA_DataValue *dataValue, const weathersvr::WeatherData& weatherData, std::string weatherVariableName) {
+	if (weatherVariableName == weathersvr::WeatherData::BROWSE_LATITUDE) {
+		std::cout << "Weather latitude: " << weatherData.getLatitude() << std::endl;
+		UA_Double latitudeValue = weatherData.getLatitude();
+		UA_Variant_setScalarCopy(&(dataValue->value), &latitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_LONGITUDE) {
+		std::cout << "Weather longitude: " << weatherData.getLongitude() << std::endl;
+		UA_Double longitudeValue = weatherData.getLongitude();
+		UA_Variant_setScalarCopy(&dataValue->value, &longitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TIMEZONE) {
+		std::cout << "Weather timezone: " << weatherData.getTimezone() << std::endl;
+		UA_String timezoneValue = UA_STRING_ALLOC(weatherData.getTimezone().c_str());
+		UA_Variant_setScalarCopy(&dataValue->value, &timezoneValue, &UA_TYPES[UA_TYPES_STRING]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_ICON) {
+		std::cout << "Weather icon: " << weatherData.getCurrentlyIcon() << std::endl;
+		UA_String iconValue = UA_STRING_ALLOC(weatherData.getCurrentlyIcon().c_str());
+		UA_Variant_setScalarCopy(&dataValue->value, &iconValue, &UA_TYPES[UA_TYPES_STRING]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TEMPERATURE) {
+		std::cout << "Weather temperature: " << weatherData.getCurrentlyTemperature() << std::endl;
+		UA_Double temperatureValue = weatherData.getCurrentlyTemperature();
+		UA_Variant_setScalarCopy(&dataValue->value, &temperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_APPARENT_TEMPERATURE) {
+		std::cout << "Weather apparent temperature: " << weatherData.getCurrentlyApparentTemperature() << std::endl;
+		UA_Double apparentTemperatureValue = weatherData.getCurrentlyApparentTemperature();
+		UA_Variant_setScalarCopy(&dataValue->value, &apparentTemperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_HUMIDITY) {
+		std::cout << "Weather humidity: " << weatherData.getCurrentlyHumidity() << std::endl;
+		UA_Double humidityValue = weatherData.getCurrentlyHumidity();
+		UA_Variant_setScalarCopy(&dataValue->value, &humidityValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_PRESSURE) {
+		std::cout << "Weather pressure: " << weatherData.getCurrentlyPressure() << std::endl;
+		UA_Double pressureValue = weatherData.getCurrentlyPressure();
+		UA_Variant_setScalarCopy(&dataValue->value, &pressureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
+		std::cout << "Weather wind speed: " << weatherData.getCurrentlyWindSpeed() << std::endl;
+		UA_Double windSpeedValue = weatherData.getCurrentlyWindSpeed();
+		UA_Variant_setScalarCopy(&dataValue->value, &windSpeedValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_CLOUD_COVER) {
+		std::cout << "Weather cloud cover: " << weatherData.getCurrentlyCloudCover() << std::endl;
+		UA_Double cloudCoverValue = weatherData.getCurrentlyCloudCover();
+		UA_Variant_setScalarCopy(&dataValue->value, &cloudCoverValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+		dataValue->hasValue = true;
+	}
+}
+
+/*
 Callback method for every read request of the weather variables in the OPC address space.
-The weather variables will be updated in case of the time passed between requests is more than 15 minutes or if is the first time downloading data.
-Because it's a callback method from the open62541 library, you can not pass additional parameters to use as local variables, consequently the data
-necessary needs to be searched from the node id and web service.
+This method is going to be call for the first time when a weather variable node is added to the address space and also for every read request.
+The weather variables need to be initialized for the first call and be updated in case of the time passed between requests is more than 15 minutes.
+Because it's a callback method from the open62541 library, you can not pass additional parameters to use as local variables, consequently the data necessary needs to be searched from the node id and web service.
 */
 static UA_StatusCode readRequest(UA_Server *server,
 	const UA_NodeId *sessionId, void *sessionContext,
@@ -30,82 +91,49 @@ static UA_StatusCode readRequest(UA_Server *server,
 	UA_DataValue *dataValue) {
 
 	if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == weathersvr::WebService::OPC_NS_INDEX) {
-		try {
-			size_t length = nodeId->identifier.string.length;
-			UA_Byte* data = nodeId->identifier.string.data;
-			/* It needs to get the country code and location name from the node id to look for them in the web service's vector.
-			The NodeId is composed as: Countries.CountryCode.LocationName.WeatherVariable
-			The country code will be returned at position 10 (counting starting from pos 0) and 2 letters.
-			The location name will be returned at position 13 until the first '.' after that.
-			The variable name will be returned at position after the first '.' of the search of the location until the end of the node id. */
-			std::string nodeIdName(reinterpret_cast<char*>(data), length);
-			std::string countryCode = nodeIdName.substr(10, 2);
-			size_t posDot = nodeIdName.find(".", 13);
-			std::string locationName = nodeIdName.substr(13, posDot - 13);
-			std::string weatherVariableName = nodeIdName.substr(posDot + 1);
+		size_t length = nodeId->identifier.string.length;
+		UA_Byte* data = nodeId->identifier.string.data;
+		/* It needs to get the country code and location name from the node id to look for them in the web service's vector.
+		The NodeId is composed as: Countries.CountryCode.LocationName.WeatherVariable
+		The country code will be returned at position 10 (counting starting from pos 0) and 2 letters.
+		The location name will be returned at position 13 until the first '.' after that.
+		The variable name will be returned at position after the first '.' of the search of the location until the end of the node id. */
+		std::string nodeIdName(reinterpret_cast<char*>(data), length);
+		std::string countryCode = nodeIdName.substr(10, 2);
+		size_t posDot = nodeIdName.find(".", 13);
+		std::string locationName = nodeIdName.substr(13, posDot - 13);
+		std::string weatherVariableName = nodeIdName.substr(posDot + 1);
 
-			// Search for the country in the list of countries of the web service.
-			auto allCountries = webService->getAllCountries();
-			auto tempCountry = weathersvr::CountryData {countryCode};
-			auto country = std::find(allCountries.begin(), allCountries.end(), tempCountry);
+		// Search for the country in the list of countries of the web service.
+		auto searchCountry = weathersvr::CountryData {countryCode};
+		auto itCountry = std::find(webService->getAllCountries().begin(), webService->getAllCountries().end(), searchCountry);
+		// Search for the location in the list of locations inside the country of the web service.
+		auto searchLocation = weathersvr::LocationData {locationName, countryCode};
+		auto itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
 
-			// Search for the location in the list of locations inside the country of the web service.
-			auto allLocations = country->getLocations();
-			auto tempLocation = weathersvr::LocationData {locationName, countryCode};
-			auto location = std::find(allLocations.begin(), allLocations.end(), tempLocation);
+		// Get current time to compare with the time when the Location was downloaded.
+		auto now = std::chrono::system_clock::now();
+		std::chrono::minutes intervalBetweenDownloads = std::chrono::duration_cast<std::chrono::minutes>(now - itLocation->getReadLastTime());
 
-			// Creates and define the location attributes/variable node class
-			webService->fetchWeather(location->getLatitude(), location->getLongitude()).then([&](web::json::value response) {
-				weathersvr::WeatherData weatherData = weathersvr::WeatherData::parseJson(response);
+		/* The weather data will be download only for the first time or after a interval of minutes specified by the constant weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA. */
+		if (!(itLocation->getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA) {
+			try {
+				webService->fetchWeather(itLocation->getLatitude(), itLocation->getLongitude()).then([&](web::json::value response) {
+					itLocation->setWeatherData(weathersvr::WeatherData::parseJson(response));
+					itLocation->setHasBeenReceivedWeatherData(true);
 
-				if (weatherVariableName == weathersvr::WeatherData::BROWSE_LATITUDE) {
-					UA_Double latitudeValue = weatherData.getLatitude();
-					UA_Variant_setScalarCopy(&dataValue->value, &latitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_LONGITUDE) {
-					UA_Double longitudeValue = weatherData.getLongitude();
-					UA_Variant_setScalarCopy(&dataValue->value, &longitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TIMEZONE) {
-					UA_String timezoneValue = UA_STRING_ALLOC(weatherData.getTimezone().c_str());
-					UA_Variant_setScalarCopy(&dataValue->value, &timezoneValue, &UA_TYPES[UA_TYPES_STRING]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_ICON) {
-					UA_String iconValue = UA_STRING_ALLOC(weatherData.getCurrentlyIcon().c_str());
-					UA_Variant_setScalarCopy(&dataValue->value, &iconValue, &UA_TYPES[UA_TYPES_STRING]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TEMPERATURE) {
-					UA_Double temperatureValue = weatherData.getCurrentlyTemperature();
-					UA_Variant_setScalarCopy(&dataValue->value, &temperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_APPARENT_TEMPERATURE) {
-					UA_Double apparentTemperatureValue = weatherData.getCurrentlyApparentTemperature();
-					UA_Variant_setScalarCopy(&dataValue->value, &apparentTemperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_HUMIDITY) {
-					UA_Double humidityValue = weatherData.getCurrentlyHumidity();
-					UA_Variant_setScalarCopy(&dataValue->value, &humidityValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_PRESSURE) {
-					UA_Double pressureValue = weatherData.getCurrentlyPressure();
-					UA_Variant_setScalarCopy(&dataValue->value, &pressureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
-					UA_Double windSpeedValue = weatherData.getCurrentlyWindSpeed();
-					UA_Variant_setScalarCopy(&dataValue->value, &windSpeedValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_CLOUD_COVER) {
-					UA_Double cloudCoverValue = weatherData.getCurrentlyCloudCover();
-					UA_Variant_setScalarCopy(&dataValue->value, &cloudCoverValue, &UA_TYPES[UA_TYPES_DOUBLE]);
-					dataValue->hasValue = true;
-				}
-			}).wait();
-		} catch (const std::exception& e) {
-			UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-				"Error on requestWeather method!");
-			UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-				e.what());
+					if (intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA)
+						itLocation->setReadLastTime(now);
+				}).wait();
+			} catch (const std::exception& e) {
+				UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+					"Error on requestWeather method!");
+				UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+					e.what());
+			}
 		}
+
+		updateWeatherVariables(dataValue, itLocation->getWeatherData(), weatherVariableName);
 	}
 
 	return UA_STATUSCODE_GOOD;
@@ -115,12 +143,10 @@ static UA_StatusCode readRequest(UA_Server *server,
 Request all the weather information of the location supplied by parameter from the web service.
 Map these objects returned from the web service in OPC UA objects and put them available in the address space.
 @param *server - The OPC UA server where the objects will be added in the address space view.
-@param *webService - Service responsible for REST call on the internet.
 @param &location - The LocationData object which the weather will be requested for.
 @param UA_NodeId parentNodeId - The parent node id of the object where the variables will be added in OPC UA.
 */
-static void requestWeather(UA_Server* server, weathersvr::WebService* webService
-	, weathersvr::LocationData& location, UA_NodeId parentNodeId) {
+static void requestWeather(UA_Server* server, weathersvr::LocationData& location, UA_NodeId parentNodeId) {
 
 	// #################### Latitude variable node 
 	/* Creates the identifier for the node id of the new variable node class
@@ -312,17 +338,15 @@ in this function. Locations will be added to it.
 */
 static void requestLocations(UA_Server* server, weathersvr::CountryData& country, UA_NodeId parentNodeId) {
 	try {
-		std::vector<weathersvr::LocationData> allLocations;
 		webService->fetchAllLocations(country.getCode()).then([&](web::json::value response) {
-			allLocations = weathersvr::LocationData::parseJsonArray(response);
-			country.setLocations(allLocations);
+			country.setLocations(weathersvr::LocationData::parseJsonArray(response));
 
-			for (size_t i {0}; i < allLocations.size(); i++) {
-				std::string locationName = allLocations.at(i).getName();
-				std::string locationCity = allLocations.at(i).getCity();
-				std::string locationCountryCode = allLocations.at(i).getCountryCode();
-				double locationLatitude = allLocations.at(i).getLatitude();
-				double locationLongitude = allLocations.at(i).getLongitude();
+			for (size_t i {0}; i < country.getLocations().size(); i++) {
+				std::string locationName = country.getLocations().at(i).getName();
+				std::string locationCity = country.getLocations().at(i).getCity();
+				std::string locationCountryCode = country.getLocations().at(i).getCountryCode();
+				double locationLatitude = country.getLocations().at(i).getLatitude();
+				double locationLongitude = country.getLocations().at(i).getLongitude();
 				/* Creates the identifier for the node id of the new Location object
 				The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
 				std::string countries {weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID};
@@ -342,7 +366,7 @@ static void requestLocations(UA_Server* server, weathersvr::CountryData& country
 					UA_QUALIFIEDNAME_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationName.c_str()),
 					UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), locationObjAttr, NULL, NULL);
 
-				requestWeather(server, webService, allLocations.at(i), locationObjId);
+				requestWeather(server, country.getLocations().at(i), locationObjId);
 			}
 		}).wait();
 	} catch (const std::exception& e) {
@@ -362,17 +386,15 @@ Map these objects returned from the web service in OPC UA objects and put them a
 void requestCountries(UA_Server * server, const UA_NodeId &parentNodeId)
 {
 	try {
-		std::vector<weathersvr::CountryData> allCountries;
 		webService->fetchAllCountries().then([&](web::json::value response) {
-			allCountries = weathersvr::CountryData::parseJsonArray(response);
-			webService->setAllCountries(allCountries);
+			webService->setAllCountries(weathersvr::CountryData::parseJsonArray(response));
 
-			// TODO: change the magic constant 2 to allCountries.size() in the loop condition if you want to download all the countries.
-			for (size_t i {0}; i < 1; i++) {
-				std::string countryName = allCountries.at(i).getName();
-				std::string countryCode = allCountries.at(i).getCode();
-				uint32_t countryCitiesNumber = allCountries.at(i).getCitiesNumber();
-				uint32_t countryLocationsNumber = allCountries.at(i).getLocationsNumber();
+			// TODO: change the magic constant 3 to allCountries.size() in the loop condition if you want to download all the countries.
+			for (size_t i {0}; i < 3; i++) {
+				std::string countryName = webService->getAllCountries().at(i).getName();
+				std::string countryCode = webService->getAllCountries().at(i).getCode();
+				uint32_t countryCitiesNumber = webService->getAllCountries().at(i).getCitiesNumber();
+				uint32_t countryLocationsNumber = webService->getAllCountries().at(i).getLocationsNumber();
 
 				/* Creates the identifier for the node id of the new Country object
 				The identifier for the node id of every Country object will be: Countries.CountryCode */
