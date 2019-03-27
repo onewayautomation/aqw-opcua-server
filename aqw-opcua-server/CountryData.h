@@ -14,6 +14,11 @@ namespace weathersvr {
 	class CountryData {
 	public:
 		CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations);
+		/* 
+		This constructor version is used for initialize temporary CountryData objects to look for them inside a vector of CountryData objects.
+		Example: when using find function from algorithm library.
+		*/
+		CountryData(std::string code);
 
 		/* 
 		Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -32,13 +37,17 @@ namespace weathersvr {
 		*/
 		static std::vector<CountryData> parseJsonArray(web::json::value& jsonArray);
 		
-		void setLocations(const std::vector<LocationData>& loc);
+		void setLocations(const std::vector<LocationData>& allLocations);
 
 		std::string getName() const { return name; }
 		std::string getCode() const { return code; }
 		uint32_t getCitiesNumber() const { return citiesNumber; }
 		uint32_t getLocationsNumber() const { return locationsNumber; }
-		std::vector<LocationData> getLocations() const { return locations; }
+		std::vector<LocationData>& getLocations() { return locations; }
+
+		bool operator<(const CountryData& rhs) const;
+		bool operator==(const CountryData& rhs) const;
+		bool operator!=(const CountryData& rhs) const;
 
 		// Constants Representing the string(key) of the pair string:value of JSON objects.
 		static const utility::string_t KEY_NAME; // Key country's name in the JSON result.

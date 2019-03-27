@@ -18,6 +18,11 @@ namespace weathersvr {
 	public:
 		LocationData(std::string name, std::string city, std::string countryCode, 
 			double latitude, double longitude);
+		/*
+		This constructor version is used for initialize temporary LocationData objects to look for them inside a vector of LocationData objects.
+		Example: when using find function from algorithm library.
+		*/
+		LocationData(std::string name, std::string countryCode);
 
 		/*
 		Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -41,6 +46,10 @@ namespace weathersvr {
 		std::string getCountryCode() const { return countryCode; }
 		double getLatitude() const { return latitude; }
 		double getLongitude() const { return longitude; }
+
+		bool operator<(const LocationData& rhs) const;
+		bool operator==(const LocationData& rhs) const;
+		bool operator!=(const LocationData& rhs) const;
 
 		// Constants Representing the string(key) of the pair string:value of JSON objects.
 		static const utility::string_t KEY_NAME;

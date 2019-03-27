@@ -59,7 +59,7 @@ pplx::task<web::json::value> WebService::fetchAllLocations(const std::string& co
 	});
 }
 
-pplx::task<web::json::value> weathersvr::WebService::fetchWeather(const double &latitude, const double &longitude) {
+pplx::task<web::json::value> weathersvr::WebService::fetchWeather(const double& latitude, const double& longitude) {
 	std::string coordinatesPath = std::to_string(latitude) + "," + std::to_string(longitude);
 	std::string excludeQuery = WebService::PARAM_VALUE_API_DARKSKY_MINUTELY 
 		+ "," + WebService::PARAM_VALUE_API_DARKSKY_HOURLY 
@@ -87,6 +87,6 @@ pplx::task<web::json::value> weathersvr::WebService::fetchWeather(const double &
 	});
 }
 
-void WebService::setAllCountries(const std::vector<CountryData> &countries) {
-	fetchedAllCountries = countries;
+void WebService::setAllCountries(const std::vector<CountryData>& allCountries) {
+	fetchedAllCountries = allCountries;
 }
