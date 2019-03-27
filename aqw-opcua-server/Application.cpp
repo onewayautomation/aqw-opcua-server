@@ -26,52 +26,42 @@ Map these objects returned from the web service in OPC UA objects and put them a
 */
 static void updateWeatherVariables(UA_DataValue *dataValue, const weathersvr::WeatherData& weatherData, std::string weatherVariableName) {
 	if (weatherVariableName == weathersvr::WeatherData::BROWSE_LATITUDE) {
-		std::cout << "Weather latitude: " << weatherData.getLatitude() << std::endl;
 		UA_Double latitudeValue = weatherData.getLatitude();
 		UA_Variant_setScalarCopy(&(dataValue->value), &latitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_LONGITUDE) {
-		std::cout << "Weather longitude: " << weatherData.getLongitude() << std::endl;
 		UA_Double longitudeValue = weatherData.getLongitude();
 		UA_Variant_setScalarCopy(&dataValue->value, &longitudeValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TIMEZONE) {
-		std::cout << "Weather timezone: " << weatherData.getTimezone() << std::endl;
 		UA_String timezoneValue = UA_STRING_ALLOC(weatherData.getTimezone().c_str());
 		UA_Variant_setScalarCopy(&dataValue->value, &timezoneValue, &UA_TYPES[UA_TYPES_STRING]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_ICON) {
-		std::cout << "Weather icon: " << weatherData.getCurrentlyIcon() << std::endl;
 		UA_String iconValue = UA_STRING_ALLOC(weatherData.getCurrentlyIcon().c_str());
 		UA_Variant_setScalarCopy(&dataValue->value, &iconValue, &UA_TYPES[UA_TYPES_STRING]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_TEMPERATURE) {
-		std::cout << "Weather temperature: " << weatherData.getCurrentlyTemperature() << std::endl;
 		UA_Double temperatureValue = weatherData.getCurrentlyTemperature();
 		UA_Variant_setScalarCopy(&dataValue->value, &temperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_APPARENT_TEMPERATURE) {
-		std::cout << "Weather apparent temperature: " << weatherData.getCurrentlyApparentTemperature() << std::endl;
 		UA_Double apparentTemperatureValue = weatherData.getCurrentlyApparentTemperature();
 		UA_Variant_setScalarCopy(&dataValue->value, &apparentTemperatureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_HUMIDITY) {
-		std::cout << "Weather humidity: " << weatherData.getCurrentlyHumidity() << std::endl;
 		UA_Double humidityValue = weatherData.getCurrentlyHumidity();
 		UA_Variant_setScalarCopy(&dataValue->value, &humidityValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_PRESSURE) {
-		std::cout << "Weather pressure: " << weatherData.getCurrentlyPressure() << std::endl;
 		UA_Double pressureValue = weatherData.getCurrentlyPressure();
 		UA_Variant_setScalarCopy(&dataValue->value, &pressureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
-		std::cout << "Weather wind speed: " << weatherData.getCurrentlyWindSpeed() << std::endl;
 		UA_Double windSpeedValue = weatherData.getCurrentlyWindSpeed();
 		UA_Variant_setScalarCopy(&dataValue->value, &windSpeedValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_CLOUD_COVER) {
-		std::cout << "Weather cloud cover: " << weatherData.getCurrentlyCloudCover() << std::endl;
 		UA_Double cloudCoverValue = weatherData.getCurrentlyCloudCover();
 		UA_Variant_setScalarCopy(&dataValue->value, &cloudCoverValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
