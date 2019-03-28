@@ -12,11 +12,17 @@ const short LocationData::INVALID_LATITUDE = 91;
 const short LocationData::INVALID_LONGITUDE = 181;
 
 weathersvr::LocationData::LocationData(std::string name, std::string city, std::string countryCode,
-	double latitude, double longitude)
-	: name {name}, city {city}, countryCode {countryCode}, latitude {latitude}, longitude {longitude}
+	double latitude, double longitude, bool hasBeenReceivedWeatherData)
+	: name {name}, city {city}, countryCode {countryCode}, latitude {latitude}, longitude {longitude}, hasBeenReceivedWeatherData {hasBeenReceivedWeatherData}
+{
+	readLastTime = std::chrono::system_clock::now();
+}
+
+weathersvr::LocationData::LocationData(std::string name, std::string countryCode)
+	: LocationData {name, "", countryCode, INVALID_LATITUDE, INVALID_LONGITUDE}
 {}
 
-LocationData LocationData::parseJson(web::json::value &json) {
+LocationData LocationData::parseJson(web::json::value& json) {
 	// Converts from wstring to string
 	std::string lName = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
 	std::string lCity = utility::conversions::to_utf8string(json.at(KEY_CITY_NAME).as_string());
@@ -36,15 +42,43 @@ LocationData LocationData::parseJson(web::json::value &json) {
 	return LocationData(lName, lCity, lCountryCode, lLatitude, lLongittude);
 }
 
-std::vector<LocationData> LocationData::parseJsonArray(web::json::value &jsonArray) {
+std::vector<LocationData> LocationData::parseJsonArray(web::json::value& jsonArray) {
 	std::vector<LocationData> vectorAllLocations;
 	if (jsonArray.is_array()) {
 		for (size_t i {0}; i < jsonArray.size(); i++) {
 			auto location = jsonArray[i];
 			LocationData locationData = LocationData::parseJson(location);
-			vectorAllLocations.push_back(locationData);
+
+			//Only add the location to the vector if has valid coordinates.
+			if (locationData.getLatitude() != weathersvr::LocationData::INVALID_LATITUDE
+				&& locationData.getLongitude() != weathersvr::LocationData::INVALID_LONGITUDE)
+				vectorAllLocations.push_back(locationData);
 		}
 	}
 
 	return vectorAllLocations;
+}
+
+void weathersvr::LocationData::setHasBeenReceivedWeatherData(const bool received) {
+	hasBeenReceivedWeatherData = received;
+}
+
+void weathersvr::LocationData::setWeatherData(const WeatherData weather) {
+	weatherData = weather;
+}
+
+void weathersvr::LocationData::setReadLastTime(const std::chrono::system_clock::time_point time) {
+	readLastTime = time;
+}
+
+bool weathersvr::LocationData::operator<(const LocationData& rhs) const {
+	return ((this->name < rhs.name) && (this->countryCode < rhs.countryCode));
+}
+
+bool weathersvr::LocationData::operator==(const LocationData& rhs) const {
+	return (this->name == rhs.name && this->countryCode == rhs.countryCode);
+}
+
+bool weathersvr::LocationData::operator!=(const LocationData & rhs) const {
+	return !(*this == rhs);
 }

@@ -17,7 +17,11 @@ CountryData::CountryData(std::string name, std::string code, uint32_t cities, ui
 	: name {name}, code {code}, citiesNumber {cities}, locationsNumber {locations}
 {}
 
-CountryData CountryData::parseJson(web::json::value &json) {
+weathersvr::CountryData::CountryData(std::string code)
+	: CountryData {"", code, 0, 0}
+{}
+
+CountryData CountryData::parseJson(web::json::value& json) {
 	return CountryData(
 		utility::conversions::to_utf8string(json.at(KEY_NAME).as_string()), // Converts from wstring to string
 		utility::conversions::to_utf8string(json.at(KEY_CODE).as_string()),
@@ -25,7 +29,7 @@ CountryData CountryData::parseJson(web::json::value &json) {
 		json.at(KEY_LOCATIONS).as_integer());;
 }
 
-std::vector<CountryData> CountryData::parseJsonArray(web::json::value &jsonArray) {
+std::vector<CountryData> CountryData::parseJsonArray(web::json::value& jsonArray) {
 	std::vector<CountryData> vectorAllCountries;
 	if (jsonArray.is_array()) {
 		for (size_t i {0}; i < jsonArray.size(); i++) {
@@ -38,8 +42,20 @@ std::vector<CountryData> CountryData::parseJsonArray(web::json::value &jsonArray
 	return vectorAllCountries;
 }
 
-void weathersvr::CountryData::setLocations(const std::vector<LocationData>& loc) {
-	locations = loc;
+void weathersvr::CountryData::setLocations(const std::vector<LocationData>& allLocations) {
+	locations = allLocations;
+}
+
+bool weathersvr::CountryData::operator<(const CountryData& rhs) const {
+	return this->code < rhs.code;
+}
+
+bool weathersvr::CountryData::operator==(const CountryData& rhs) const {
+	return this->code == rhs.code;
+}
+
+bool weathersvr::CountryData::operator!=(const CountryData& rhs) const {
+	return !(*this == rhs);
 }
 
 

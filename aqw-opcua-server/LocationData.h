@@ -1,7 +1,10 @@
 #pragma once
 #include "cpprest/http_client.h"
+#include "WeatherData.h"
 #include <string>
 #include <vector>
+#include <chrono>
+#include <ctime>
 
 namespace weathersvr {
 	/* A LocationData Class represents a JSON object returned from the Open AQ Platform API.
@@ -17,7 +20,12 @@ namespace weathersvr {
 	class LocationData {
 	public:
 		LocationData(std::string name, std::string city, std::string countryCode, 
-			double latitude, double longitude);
+			double latitude, double longitude, bool hasBeenReceivedWeatherData = false);
+		/*
+		This constructor version is used for initialize temporary LocationData objects to look for them inside a vector of LocationData objects.
+		Example: when using find function from algorithm library.
+		*/
+		LocationData(std::string name, std::string countryCode);
 
 		/*
 		Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -36,11 +44,22 @@ namespace weathersvr {
 		*/
 		static std::vector<LocationData> parseJsonArray(web::json::value& jsonArray);
 		
+		void setHasBeenReceivedWeatherData(const bool received);
+		void setWeatherData(const WeatherData weather);
+		void setReadLastTime(const std::chrono::system_clock::time_point time);
+
 		std::string getName() const { return name; }
 		std::string getCity() const { return city; }
 		std::string getCountryCode() const { return countryCode; }
 		double getLatitude() const { return latitude; }
 		double getLongitude() const { return longitude; }
+		bool getHasBeenReceivedWeatherData() const { return hasBeenReceivedWeatherData; }
+		WeatherData& getWeatherData() { return weatherData; }
+		std::chrono::system_clock::time_point getReadLastTime() const { return readLastTime; }
+
+		bool operator<(const LocationData& rhs) const;
+		bool operator==(const LocationData& rhs) const;
+		bool operator!=(const LocationData& rhs) const;
 
 		// Constants Representing the string(key) of the pair string:value of JSON objects.
 		static const utility::string_t KEY_NAME;
@@ -60,5 +79,8 @@ namespace weathersvr {
 		std::string countryCode;
 		double latitude;
 		double longitude;
+		bool hasBeenReceivedWeatherData;
+		WeatherData weatherData;
+		std::chrono::system_clock::time_point readLastTime;
 	};
 }

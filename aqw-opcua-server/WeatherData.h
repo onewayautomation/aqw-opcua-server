@@ -20,6 +20,7 @@ namespace weathersvr {
 		WeatherData(double latitude, double longitude, std::string timezone, std::string icon,
 			double temperature, double apparentTemperature, double humidity, double pressure, 
 			double windSpeed, double cloudCover);
+		WeatherData();
 
 		/*
 		Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and

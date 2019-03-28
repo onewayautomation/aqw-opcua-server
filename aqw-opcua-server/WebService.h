@@ -30,11 +30,11 @@ namespace weathersvr {
 		@return A JSON value as an array containing all the locations objects.
 		Check the LocationData Class to see the JSON representation.
 		*/
-		pplx::task<web::json::value> fetchWeather(const double &latitude, const double &longitude);
+		pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
 		
-		void setAllCountries(const std::vector<CountryData>&);
+		void setAllCountries(const std::vector<CountryData>& allCountries);
 
-		std::vector<CountryData> getAllCountries() const { return fetchedAllCountries; }
+		std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
 	
 		// Constants endpoints, keys, paths, querys etc to all the API services.
 		static const uint16_t OPC_NS_INDEX;
@@ -51,6 +51,7 @@ namespace weathersvr {
 		static const std::string PARAM_VALUE_API_DARKSKY_MINUTELY;
 		static const std::string PARAM_VALUE_API_DARKSKY_HOURLY;
 		static const std::string PARAM_VALUE_API_DARKSKY_DAILY;
+		static const short INTERVAL_DOWNLOAD_WEATHER_DATA;
 
 		/* DarkSky URI example:
 		https://api.darksky.net/forecast/KEY/latitude,longitude?exclude=minutely,hourly,daily?units=si 
