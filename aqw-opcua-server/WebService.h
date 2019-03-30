@@ -1,5 +1,6 @@
 #pragma once
 #include "cpprest/http_client.h"
+#include "open62541.h"
 #include "CountryData.h"
 #include "LocationData.h"
 #include "WeatherData.h"
@@ -32,8 +33,10 @@ namespace weathersvr {
 		*/
 		pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
 		
+		void setServer(UA_Server* uaServer);
 		void setAllCountries(const std::vector<CountryData>& allCountries);
 
+		UA_Server* getServer() { return server; }
 		std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
 	
 		// Constants endpoints, keys, paths, querys etc to all the API services.
@@ -62,6 +65,7 @@ namespace weathersvr {
 		*/
 
 	private:
+		UA_Server* server {nullptr};
 		std::vector<CountryData> fetchedAllCountries {};
 	};
 }

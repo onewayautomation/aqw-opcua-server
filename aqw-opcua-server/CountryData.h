@@ -13,7 +13,7 @@ namespace weathersvr {
 	*/
 	class CountryData {
 	public:
-		CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations);
+		CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized = false);
 		/* 
 		This constructor version is used for initialize temporary CountryData objects to look for them inside a vector of CountryData objects.
 		Example: when using find function from algorithm library.
@@ -37,12 +37,15 @@ namespace weathersvr {
 		*/
 		static std::vector<CountryData> parseJsonArray(web::json::value& jsonArray);
 		
+		/* Indetifies that this object node was added to the OPC UA address space. */
+		void setIsInitialized(const bool initialized);
 		void setLocations(const std::vector<LocationData>& allLocations);
 
 		std::string getName() const { return name; }
 		std::string getCode() const { return code; }
 		uint32_t getCitiesNumber() const { return citiesNumber; }
 		uint32_t getLocationsNumber() const { return locationsNumber; }
+		bool getIsInitialized() const { return isInitialized; }
 		std::vector<LocationData>& getLocations() { return locations; }
 
 		bool operator<(const CountryData& rhs) const;
@@ -67,6 +70,7 @@ namespace weathersvr {
 		std::string code;
 		uint32_t citiesNumber;
 		uint32_t locationsNumber;
+		bool isInitialized;
 		std::vector<LocationData> locations {};
 	};
 }

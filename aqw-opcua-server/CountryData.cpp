@@ -13,8 +13,8 @@ char CountryData::BROWSE_CODE[] = "CountryCode";
 char CountryData::BROWSE_CITIES_NUMBER[] = "CountryCitiesNumber";
 char CountryData::BROWSE_LOCATIONS_NUMBER[] = "CountryLocationsNumber";
 
-CountryData::CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations)
-	: name {name}, code {code}, citiesNumber {cities}, locationsNumber {locations}
+CountryData::CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized)
+	: name {name}, code {code}, citiesNumber {cities}, locationsNumber {locations}, isInitialized {isInitialized}
 {}
 
 weathersvr::CountryData::CountryData(std::string code)
@@ -40,6 +40,10 @@ std::vector<CountryData> CountryData::parseJsonArray(web::json::value& jsonArray
 	}
 
 	return vectorAllCountries;
+}
+
+void weathersvr::CountryData::setIsInitialized(const bool initialized) {
+	isInitialized = initialized;
 }
 
 void weathersvr::CountryData::setLocations(const std::vector<LocationData>& allLocations) {

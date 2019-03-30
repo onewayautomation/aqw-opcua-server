@@ -19,8 +19,8 @@ namespace weathersvr {
 	*/
 	class LocationData {
 	public:
-		LocationData(std::string name, std::string city, std::string countryCode, 
-			double latitude, double longitude, bool hasBeenReceivedWeatherData = false);
+		LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude, 
+			bool hasBeenReceivedWeatherData = false, bool isInitialized = false, bool isAddingWeatherToAddressSpace = false);
 		/*
 		This constructor version is used for initialize temporary LocationData objects to look for them inside a vector of LocationData objects.
 		Example: when using find function from algorithm library.
@@ -45,6 +45,8 @@ namespace weathersvr {
 		static std::vector<LocationData> parseJsonArray(web::json::value& jsonArray);
 		
 		void setHasBeenReceivedWeatherData(const bool received);
+		void setIsInitialized(const bool initialized);
+		void setIsAddingWeatherToAddressSpace(const bool addingWeatherToAddressSpace);
 		void setWeatherData(const WeatherData weather);
 		void setReadLastTime(const std::chrono::system_clock::time_point time);
 
@@ -53,7 +55,12 @@ namespace weathersvr {
 		std::string getCountryCode() const { return countryCode; }
 		double getLatitude() const { return latitude; }
 		double getLongitude() const { return longitude; }
+		/* Indetifies that this object node has received weather data information for the first time. Remember to set the weather data to this object with setWeatherData(const WeatherData weathe). */
 		bool getHasBeenReceivedWeatherData() const { return hasBeenReceivedWeatherData; }
+		/* Indetifies that this object node was added to the OPC UA address space. */
+		bool getIsInitialized() const { return isInitialized; }
+		/* Indetifies that the weather data variables nodes are currently being adding to the OPC UA address space. */
+		bool getIsAddingWeatherToAddressSpace() const { return isAddingWeatherToAddressSpace; }
 		WeatherData& getWeatherData() { return weatherData; }
 		std::chrono::system_clock::time_point getReadLastTime() const { return readLastTime; }
 
@@ -72,6 +79,7 @@ namespace weathersvr {
 		static const short INVALID_LONGITUDE;
 
 		// C-Style String representing the browse/display name of the variables nodes in OPC UA.
+		static char BROWSE_FLAG_INITIALIZE[];
 
 	private:
 		std::string name;
@@ -80,6 +88,8 @@ namespace weathersvr {
 		double latitude;
 		double longitude;
 		bool hasBeenReceivedWeatherData;
+		bool isInitialized;
+		bool isAddingWeatherToAddressSpace;
 		WeatherData weatherData;
 		std::chrono::system_clock::time_point readLastTime;
 	};

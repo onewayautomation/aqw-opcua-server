@@ -9,8 +9,8 @@ const utility::string_t WebService::PATH_API_OPENAQ_LOCATIONS = U("locations");
 const utility::string_t WebService::PATH_API_OPENAQ_MEASUREMENTS = U("measurements");
 const utility::string_t WebService::PARAM_API_OPENAQ_COUNTRY = U("country");
 
-// TODO: Replace the value of this constant with your DarkSky API Key
 const utility::string_t WebService::ENDPOINT_API_DARKSKY = U("https://api.darksky.net/forecast");
+// TODO: Replace the value of this constant with your DarkSky API Key
 const utility::string_t WebService::KEY_API_DARKSKY = U("");
 const utility::string_t WebService::PARAM_API_DARKSKY_EXCLUDE = U("exclude");
 const utility::string_t WebService::PARAM_API_DARKSKY_UNITS = U("units");
@@ -88,6 +88,10 @@ pplx::task<web::json::value> weathersvr::WebService::fetchWeather(const double& 
 		std::cout << "JSON extracted from fetchWeather() completed!" << std::endl;
 		return jsonValue;
 	});
+}
+
+void weathersvr::WebService::setServer(UA_Server * uaServer) {
+	server = uaServer;
 }
 
 void WebService::setAllCountries(const std::vector<CountryData>& allCountries) {
