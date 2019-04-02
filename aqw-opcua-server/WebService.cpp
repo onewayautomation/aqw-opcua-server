@@ -8,6 +8,7 @@ const utility::string_t WebService::PATH_API_OPENAQ_COUNTRIES = U("countries");
 const utility::string_t WebService::PATH_API_OPENAQ_LOCATIONS = U("locations");
 const utility::string_t WebService::PATH_API_OPENAQ_MEASUREMENTS = U("measurements");
 const utility::string_t WebService::PARAM_API_OPENAQ_COUNTRY = U("country");
+const utility::string_t WebService::PARAM_API_OPENAQ_LIMIT = U("limit");
 
 const utility::string_t WebService::ENDPOINT_API_DARKSKY = U("https://api.darksky.net/forecast");
 // TODO: Replace the value of this constant with your DarkSky API Key
@@ -41,10 +42,11 @@ pplx::task<web::json::value> WebService::fetchAllCountries() {
 	});
 }
 
-pplx::task<web::json::value> WebService::fetchAllLocations(const std::string& countryName) {
+pplx::task<web::json::value> WebService::fetchAllLocations(const std::string& countryName, const uint32_t limit) {
 	web::uri_builder uriBuilder(ENDPOINT_API_OPENAQ);
 	uriBuilder.append_path(PATH_API_OPENAQ_LOCATIONS);
 	uriBuilder.append_query(PARAM_API_OPENAQ_COUNTRY, utility::conversions::to_string_t(countryName));
+	uriBuilder.append_query(PARAM_API_OPENAQ_LIMIT, utility::conversions::to_string_t(std::to_string(limit)));
 
 	web::http::client::http_client client(uriBuilder.to_string());
 	return client.request(web::http::methods::GET)
