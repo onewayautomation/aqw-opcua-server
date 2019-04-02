@@ -1,6 +1,7 @@
 #pragma once
 #include "cpprest/http_client.h"
 #include "open62541.h"
+#include "Settings.h"
 #include "CountryData.h"
 #include "LocationData.h"
 #include "WeatherData.h"
@@ -36,9 +37,11 @@ namespace weathersvr {
 		pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
 		
 		void setServer(UA_Server* uaServer);
+		void setSettings(const Settings& settingsObj);
 		void setAllCountries(const std::vector<CountryData>& allCountries);
 
 		UA_Server* getServer() { return server; }
+		const Settings& getSettings() { return settings; }
 		std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
 	
 		// Constants endpoints, keys, paths, querys etc to all the API services.
@@ -51,13 +54,11 @@ namespace weathersvr {
 		static const utility::string_t PARAM_API_OPENAQ_LIMIT;
 
 		static const utility::string_t ENDPOINT_API_DARKSKY;
-		static const utility::string_t KEY_API_DARKSKY;
 		static const utility::string_t PARAM_API_DARKSKY_EXCLUDE;
 		static const utility::string_t PARAM_API_DARKSKY_UNITS;
 		static const std::string PARAM_VALUE_API_DARKSKY_MINUTELY;
 		static const std::string PARAM_VALUE_API_DARKSKY_HOURLY;
 		static const std::string PARAM_VALUE_API_DARKSKY_DAILY;
-		static const short INTERVAL_DOWNLOAD_WEATHER_DATA;
 
 		/* DarkSky URI example:
 		https://api.darksky.net/forecast/KEY/latitude,longitude?exclude=minutely,hourly,daily?units=si 
@@ -69,6 +70,7 @@ namespace weathersvr {
 
 	private:
 		UA_Server* server {nullptr};
+		Settings settings;
 		std::vector<CountryData> fetchedAllCountries {};
 	};
 }

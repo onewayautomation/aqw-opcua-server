@@ -1,5 +1,7 @@
 #include "open62541.h"
+#include "Settings.h"
 #include "WebService.h"
+#include <fstream>
 #include <signal.h>
 #include <stdlib.h>
 #include <thread>
@@ -118,13 +120,13 @@ static UA_StatusCode readRequest(UA_Server *server, const UA_NodeId *sessionId, 
 		std::chrono::minutes intervalBetweenDownloads = std::chrono::duration_cast<std::chrono::minutes>(now - itLocation->getReadLastTime());
 
 		/* The weather data will be downloaded only for the first time or after a interval of minutes specified by the constant weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA. */
-		if (!(itLocation->getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA) {
+		if (!(itLocation->getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= webService->getSettings().getIntervalDownloadWeatherData()) {
 			try {
 				webService->fetchWeather(itLocation->getLatitude(), itLocation->getLongitude()).then([&](web::json::value response) {
 					itLocation->setWeatherData(weathersvr::WeatherData::parseJson(response));
 					itLocation->setHasBeenReceivedWeatherData(true);
 
-					if (intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA)
+					if (intervalBetweenDownloads.count() >= webService->getSettings().getIntervalDownloadWeatherData())
 						itLocation->setReadLastTime(now);
 				}).wait();
 			} catch (const std::exception& e) {
@@ -611,7 +613,14 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 	return defaultGetNode(nodestoreContext, nodeId);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	// Build the application settings variables.
+	weathersvr::Settings settings;
+	if (argc > 1)
+		settings.setup(argv[1]);
+
+	webService->setSettings(settings);
+
 	signal(SIGINT, stopHandler);
 	signal(SIGTERM, stopHandler);
 
