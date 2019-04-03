@@ -7,9 +7,11 @@ namespace weathersvr {
 	class Settings {
 	public:
 		Settings();
-
+		/*
+		Open the file passed to the formal parameter fileName and set the settings to variables of this class.
+		@param char* fileName - the path containing the settings file name and extension that is passed to command line arguments.
+		*/
 		void setup(char* fileName);
-		void setDefaultValues();
 
 		const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
 		const utility::string_t& getUnits() const { return units; }
@@ -22,6 +24,14 @@ namespace weathersvr {
 		static const utility::string_t PARAM_NAME_API_DARKSKY_UNITS;
 		static const utility::string_t PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA;
 	private:
+		void setDefaultValues();
+		/*
+		Check if the values present in the settings.json file related to the dark sky api are valid before set them to respective variables. If is not valid, the default values will be kept.
+		This function may throw an exception web::json::json_exception.
+		@param web::json::value& jsonObj - The Json OBJECT which the values will be parsed and validated.
+		*/
+		void validateValuesFromDarkSky(web::json::value& jsonObj);
+
 		utility::string_t keyApiDarksky;
 		utility::string_t units;
 		short intervalDownloadWeatherData;

@@ -25,18 +25,17 @@ void weathersvr::Settings::setup(char * fileName) {
 		std::cout << "Building settings..." << std::endl;
 
 		auto jsonFile = web::json::value::parse(inputFile);
-		auto darkSkyObj = jsonFile.at(API_DARKSKY);
-
-		// Set the values from the Json file's DarkSky object.
-		keyApiDarksky = darkSkyObj.at(PARAM_NAME_API_DARKSKY_API_KEY).as_string();
-		units = darkSkyObj.at(PARAM_NAME_API_DARKSKY_UNITS).as_string();
-		intervalDownloadWeatherData = static_cast<short>(darkSkyObj.at(PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA).as_integer());
+		validateValuesFromDarkSky(jsonFile.at(API_DARKSKY));
 
 		std::cout << "Build completed successfully!!!" << std::endl;
 	} catch (const web::json::json_exception& e) {
 		std::cerr << "Error parsing the settings json file: " << e.what() << std::endl;
 		std::cerr << "Default values will be used (Except for the DarkSky API_KEY)" << std::endl;
 	}
+
+	std::wcout << "Weather data units: " << units << std::endl;
+	std::cout << "Interval in minutes for automatic update of weather data: " << intervalDownloadWeatherData << std::endl;
+
 	std::cout << "################################################" << std::endl << std::endl;
 }
 
@@ -44,4 +43,25 @@ void weathersvr::Settings::setDefaultValues() {
 	keyApiDarksky = U("");
 	units = U("si");
 	intervalDownloadWeatherData = 10;
+}
+
+void weathersvr::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {
+	// Set the values from the Json file's DarkSky object.
+
+	keyApiDarksky = jsonObj.at(PARAM_NAME_API_DARKSKY_API_KEY).as_string();
+	/* `units` - Return weather conditions in the requested units, should be one of the following:
+	auto: automatically select units based on geographic location
+	ca: same as si, except that windSpeed and windGust are in kilometers per hour
+	uk2: same as si, except that nearestStormDistance and visibility are in miles, and windSpeed and windGust in miles per hour
+	us: Imperial units (the default)
+	si: SI units
+	*/
+	utility::string_t tempUnits = jsonObj.at(PARAM_NAME_API_DARKSKY_UNITS).as_string();
+	if (tempUnits == U("auto") || tempUnits == U("ca") || tempUnits == U("uk2") || tempUnits == U("us") || tempUnits == U("si"))
+		units = tempUnits;
+
+	/* The interval for downloading allowed is from 1 to 60 minutes. */
+	short tempInterval = static_cast<short>(jsonObj.at(PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA).as_integer());
+	if (tempInterval >= 1 && tempInterval <= 60)
+		intervalDownloadWeatherData = tempInterval;
 }
