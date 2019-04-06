@@ -1,0 +1,13 @@
+{
+  "opc_ua_server": {
+
+  },
+  "openaq_api": {
+
+  },
+  "darksky_api": {
+    "api_key": "PUT YOUR API KEY FROM DARK SKY HERE",
+    "param_units": "si",
+    "interval_download": 15
+  }
+}
