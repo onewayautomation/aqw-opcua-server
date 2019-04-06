@@ -136,12 +136,14 @@
     <ClCompile Include="CountryData.cpp" />
     <ClCompile Include="LocationData.cpp" />
     <ClCompile Include="open62541.c" />
+    <ClCompile Include="Settings.cpp" />
     <ClCompile Include="WeatherData.cpp" />
     <ClCompile Include="WebService.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CountryData.h" />
     <ClInclude Include="LocationData.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="WeatherData.h" />
     <ClInclude Include="WebService.h" />
   </ItemGroup>

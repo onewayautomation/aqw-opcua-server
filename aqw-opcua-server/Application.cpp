@@ -1,5 +1,7 @@
 #include "open62541.h"
+#include "Settings.h"
 #include "WebService.h"
+#include <fstream>
 #include <signal.h>
 #include <stdlib.h>
 #include <thread>
@@ -73,11 +75,8 @@ This method is going to be call for the first time when a weather variable node 
 The weather variables need to be initialized for the first call and be updated in case of the time passed between requests is more than 15 minutes.
 Because it's a callback method from the open62541 library, you can not pass additional parameters to use as local variables, consequently the data necessary needs to be searched from the node id and web service.
 */
-static UA_StatusCode readRequest(UA_Server *server,
-	const UA_NodeId *sessionId, void *sessionContext,
-	const UA_NodeId *nodeId, void *nodeContext,
-	UA_Boolean sourceTimeStamp, const UA_NumericRange *range,
-	UA_DataValue *dataValue) {
+static UA_StatusCode readRequest(UA_Server *server, const UA_NodeId *sessionId, void *sessionContext,
+	const UA_NodeId *nodeId, void *nodeContext,	UA_Boolean sourceTimeStamp, const UA_NumericRange *range, UA_DataValue *dataValue) {
 
 	if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == weathersvr::WebService::OPC_NS_INDEX) {
 		size_t length = nodeId->identifier.string.length;
@@ -100,14 +99,11 @@ static UA_StatusCode readRequest(UA_Server *server,
 		*/
 		size_t posDot = nodeIdName.find(".", 13);
 		std::string locationName = nodeIdName.substr(13, posDot - 13);
-		/* The variable name will be returned at position after the first '.' of the search of the location until the end of the node id. */
-		std::string weatherVariableName = nodeIdName.substr(posDot + 1);
-
 		// Search for the location in the list of locations inside the country of the web service.
 		auto searchLocation = weathersvr::LocationData {locationName, countryCode};
 		auto itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
 
-		/* Depends on the Location, the dot can be present in its name, this way will not find the location, so we need to search for the next dot until find the location object. */
+		/* While the location is not found, continue checking for dots within its name. */
 		while (itLocation == itCountry->getLocations().end()) {
 			posDot = nodeIdName.find(".", posDot + 1);
 			locationName = nodeIdName.substr(13, posDot - 13);
@@ -116,18 +112,21 @@ static UA_StatusCode readRequest(UA_Server *server,
 			itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
 		}
 
+		/* The variable name will be returned at position after the first '.' of the search of the location until the end of the node id. */
+		std::string weatherVariableName = nodeIdName.substr(posDot + 1);
+
 		// Get current time to compare with the time when the Location was downloaded.
 		auto now = std::chrono::system_clock::now();
 		std::chrono::minutes intervalBetweenDownloads = std::chrono::duration_cast<std::chrono::minutes>(now - itLocation->getReadLastTime());
 
 		/* The weather data will be downloaded only for the first time or after a interval of minutes specified by the constant weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA. */
-		if (!(itLocation->getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA) {
+		if (!(itLocation->getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= webService->getSettings().getIntervalDownloadWeatherData()) {
 			try {
 				webService->fetchWeather(itLocation->getLatitude(), itLocation->getLongitude()).then([&](web::json::value response) {
 					itLocation->setWeatherData(weathersvr::WeatherData::parseJson(response));
 					itLocation->setHasBeenReceivedWeatherData(true);
 
-					if (intervalBetweenDownloads.count() >= weathersvr::WebService::INTERVAL_DOWNLOAD_WEATHER_DATA)
+					if (intervalBetweenDownloads.count() >= webService->getSettings().getIntervalDownloadWeatherData())
 						itLocation->setReadLastTime(now);
 				}).wait();
 			} catch (const std::exception& e) {
@@ -348,7 +347,7 @@ in this function. Locations will be added to it.
 */
 static void requestLocations(UA_Server* server, weathersvr::CountryData& country, UA_NodeId parentNodeId) {
 	try {
-		webService->fetchAllLocations(country.getCode()).then([&](web::json::value response) {
+		webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response) {
 			country.setLocations(weathersvr::LocationData::parseJsonArray(response));
 
 			for (size_t i {0}; i < country.getLocations().size(); i++) {
@@ -406,8 +405,7 @@ Map these objects returned from the web service in OPC UA objects and put them a
 @param *server - The OPC UA server where the objects will be added in the address space view.
 @param UA_NodeId parentNodeId - The parent node id of the object where the variables will be added in OPC UA.
 */
-void requestCountries(UA_Server * server, const UA_NodeId &parentNodeId)
-{
+void requestCountries(UA_Server * server, const UA_NodeId &parentNodeId) {
 	try {
 		webService->fetchAllCountries().then([&](web::json::value response) {
 			webService->setAllCountries(weathersvr::CountryData::parseJsonArray(response));
@@ -563,43 +561,49 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 			if (itCountry->getIsInitialized() && itCountry->getLocations().size() == 0) {
 				requestLocations(webService->getServer(), *itCountry, countryObjId);
 			}
-			// Only try to download weather data if they locations has been added to the country being read.
+			// Only try to download weather data if locations has been added to the country being read.
 			else if (itCountry->getIsInitialized() && itCountry->getLocations().size() > 0) {
-				/* If find the dot after location name, it means at least the client is requesting to read a specific location. */
+				/* 
+				If find the dot after beginning of location's name, it MAY mean the client is requesting to read a specific location or it just mean the location name has a '.' WITHIN the name.
+				For example, the following nodes id do not mean the client is requesting to read the location:
+				Countries.CA.Brandon
+				Countries.CA.Main St.
+				And the following nodes id mean the client is requesting to read the location:
+				Countries.CA.Brandon.FlagInitialize
+				Countries.CA.Main St.FlagInitialize
+				*/
 				size_t posDot = nodeIdName.find(".", 13);
 
+				/* If we don't find the dot on the first search, for sure that is not a request to read the location. */
 				if (posDot != std::string::npos) {
-					/*
-					The location name MAY be returned at position 13 until the first '.' after that.
-					When looking for a specifi location, check if it was found (iterator) because some locations has '.' in its name.
-					In this case, if the location (iterator) was not found, we continue searching for the next '.' until find the correct location name.
-					*/
+					/* The location name MAY be returned at position 13 until the first '.' after that. */
 					std::string locationName = nodeIdName.substr(13, posDot - 13);
-					std::string locationObjNameId = countryObjNameId + "." + locationName;
-					UA_NodeId locationObjId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationObjNameId.c_str());
 					// Search for the location in the list of locations inside the country of the web service.
 					auto searchLocation = weathersvr::LocationData {locationName, countryCode};
 					auto itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
 					
-					/* Depends on the Location, the dot can be present in its name, this way will not find the location, so we need to search for the next dot until find the location object. */
+					/* While the location is not found, continue checking for dots within its name. */
 					while (itLocation == itCountry->getLocations().end()) {
 						posDot = nodeIdName.find(".", posDot + 1);
-
 						locationName = nodeIdName.substr(13, posDot - 13);
-						locationObjNameId = countryObjNameId + "." + locationName;
-						locationObjId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationObjNameId.c_str());
 						// Search for the location in the list of locations inside the country of the web service.
 						searchLocation = weathersvr::LocationData {locationName, countryCode};
 						itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
 					}
 
+					std::string locationObjNameId = countryObjNameId + "." + locationName;
 					/*
-					Only try to download weather data if they not exist in the address space.
-					The isAddingWeatherToAddressSpace boolean variable in LocationData controls when we are adding the weather data in the OPC UA address space, that being said the requestWeather function bellow will not be called more than once.
+					The location name was found correctly. Check if there are more characters after the location name comparing the full node id name's size to the node id until the location name.
 					*/
-					if (itLocation->getIsInitialized() && !(itLocation->getHasBeenReceivedWeatherData()) && !(itLocation->getIsAddingWeatherToAddressSpace())) {
-						std::cout << "Requesting weather from: " << nodeIdName << std::endl;
-						requestWeather(webService->getServer(), *itLocation, locationObjId);
+					if (nodeIdName.size() > locationObjNameId.size()) {
+						UA_NodeId locationObjId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX, locationObjNameId.c_str());
+						/*
+						Only try to download weather data if they not exist in the address space.
+						The isAddingWeatherToAddressSpace boolean variable in LocationData controls when we are adding the weather data in the OPC UA address space, that being said the requestWeather function bellow will not be called more than once.
+						*/
+						if (itLocation->getIsInitialized() && !(itLocation->getHasBeenReceivedWeatherData()) && !(itLocation->getIsAddingWeatherToAddressSpace())) {
+							requestWeather(webService->getServer(), *itLocation, locationObjId);
+						}
 					}
 				}
 			}
@@ -609,7 +613,14 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 	return defaultGetNode(nodestoreContext, nodeId);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	// Build the application settings variables.
+	weathersvr::Settings settings;
+	if (argc > 1)
+		settings.setup(argv[1]);
+
+	webService->setSettings(settings);
+
 	signal(SIGINT, stopHandler);
 	signal(SIGTERM, stopHandler);
 
