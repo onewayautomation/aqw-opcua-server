@@ -11,16 +11,17 @@ weathersvr::Settings::Settings() {
 	setDefaultValues();
 }
 
-void weathersvr::Settings::setup(char * fileName) {
+bool weathersvr::Settings::setup(char * fileName) {
 	try {
 		std::fstream inputFile {fileName};
 
 		std::cout << "################################################" << std::endl;
-		if (!inputFile) {
+		if (!inputFile) 
+    {
 			std::cerr << "Could not open the settings file: " << fileName << std::endl;
 			std::cerr << "Check if the file name and extension are correctly. Also check if the path to the file was passed correctly." << std::endl;
 			std::cout << "################################################" << std::endl << std::endl;
-			return;
+			return false;
 		}
 		std::cout << "Building settings..." << std::endl;
 
@@ -28,15 +29,19 @@ void weathersvr::Settings::setup(char * fileName) {
 		validateValuesFromDarkSky(jsonFile.at(API_DARKSKY));
 
 		std::cout << "Build completed successfully!!!" << std::endl;
-	} catch (const web::json::json_exception& e) {
+	} 
+  catch (const web::json::json_exception& e) 
+  {
 		std::cerr << "Error parsing the settings json file: " << e.what() << std::endl;
-		std::cerr << "Default values will be used (Except for the DarkSky API_KEY)" << std::endl;
+    return false;
 	}
 
 	std::wcout << "Weather data units: " << units << std::endl;
 	std::cout << "Interval in minutes for automatic update of weather data: " << intervalDownloadWeatherData << std::endl;
 
 	std::cout << "################################################" << std::endl << std::endl;
+
+  return true;
 }
 
 void weathersvr::Settings::setDefaultValues() {

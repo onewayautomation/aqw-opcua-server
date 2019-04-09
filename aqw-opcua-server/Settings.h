@@ -11,7 +11,7 @@ namespace weathersvr {
 		Open the file passed to the formal parameter fileName and set the settings to variables of this class.
 		@param char* fileName - the path containing the settings file name and extension that is passed to command line arguments.
 		*/
-		void setup(char* fileName);
+		bool setup(char* fileName);
 
 		const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
 		const utility::string_t& getUnits() const { return units; }

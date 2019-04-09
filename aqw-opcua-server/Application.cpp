@@ -125,9 +125,7 @@ static UA_StatusCode readRequest(UA_Server *server, const UA_NodeId *sessionId, 
 				webService->fetchWeather(itLocation->getLatitude(), itLocation->getLongitude()).then([&](web::json::value response) {
 					itLocation->setWeatherData(weathersvr::WeatherData::parseJson(response));
 					itLocation->setHasBeenReceivedWeatherData(true);
-
-					if (intervalBetweenDownloads.count() >= webService->getSettings().getIntervalDownloadWeatherData())
-						itLocation->setReadLastTime(now);
+					itLocation->setReadLastTime(now);
 				}).wait();
 			} catch (const std::exception& e) {
 				UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
@@ -539,7 +537,6 @@ When clients request to read any specific location object node, the weather data
 The default function from UA_Nodestore from the UA_ServerConfig needs to be returned.
 */
 const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
-
 	if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == weathersvr::WebService::OPC_NS_INDEX) {
 		size_t length = nodeId->identifier.string.length;
 		UA_Byte* data = nodeId->identifier.string.data;
@@ -562,7 +559,7 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 				requestLocations(webService->getServer(), *itCountry, countryObjId);
 			}
 			// Only try to download weather data if locations has been added to the country being read.
-			else if (itCountry->getIsInitialized() && itCountry->getLocations().size() > 0) {
+			if (itCountry->getIsInitialized() && itCountry->getLocations().size() > 0) {
 				/* 
 				If find the dot after beginning of location's name, it MAY mean the client is requesting to read a specific location or it just mean the location name has a '.' WITHIN the name.
 				For example, the following nodes id do not mean the client is requesting to read the location:
@@ -616,8 +613,11 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 int main(int argc, char* argv[]) {
 	// Build the application settings variables.
 	weathersvr::Settings settings;
-	if (argc > 1)
-		settings.setup(argv[1]);
+  if (argc > 1)
+  {
+    if (!settings.setup(argv[1]))
+      return -1;
+  }
 
 	webService->setSettings(settings);
 
