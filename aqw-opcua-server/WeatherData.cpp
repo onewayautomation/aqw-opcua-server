@@ -9,6 +9,7 @@ const utility::string_t weathersvr::WeatherData::KEY_APARENT_TEMPERATURE = U("ap
 const utility::string_t weathersvr::WeatherData::KEY_HUMIDIY = U("humidity");
 const utility::string_t weathersvr::WeatherData::KEY_PRESSURE = U("pressure");
 const utility::string_t weathersvr::WeatherData::KEY_WINDSPEED = U("windSpeed");
+const utility::string_t weathersvr::WeatherData::KEY_WINDBEARING = U("windBearing");
 const utility::string_t weathersvr::WeatherData::KEY_CLOUD_COVER = U("cloudCover");
 const utility::string_t weathersvr::WeatherData::KEY_CURRENTLY = U("currently");
 
@@ -21,17 +22,18 @@ char weathersvr::WeatherData::BROWSE_APPARENT_TEMPERATURE[] = "ApparentTemperatu
 char weathersvr::WeatherData::BROWSE_HUMIDITY[] = "Humidity";
 char weathersvr::WeatherData::BROWSE_PRESSURE[] = "Pressure";
 char weathersvr::WeatherData::BROWSE_WIND_SPEED[] = "WindSpeed";
+char weathersvr::WeatherData::BROWSE_WIND_BEARING[] = "WindBearing";
 char weathersvr::WeatherData::BROWSE_CLOUD_COVER[] = "CloudCover";
 
 weathersvr::WeatherData::WeatherData(double latitude, double longitude, std::string timezone, std::string icon, 
-	double temperature, double apparentTemperature, double humidity, double pressure, double windSpeed, double cloudCover)
+	double temperature, double apparentTemperature, double humidity, double pressure, double windSpeed, double windBearing, double cloudCover)
 	: latitude {latitude}, longitude {longitude}, timezone {timezone}, icon {icon},
 	temperature {temperature}, apparentTemperature {apparentTemperature}, pressure {pressure}, 
-	humidity {humidity}, windSpeed {windSpeed}, cloudCover {cloudCover}
+  humidity{ humidity }, windSpeed{ windSpeed }, windBearing{ windBearing }, cloudCover{ cloudCover }
 {}
 
 weathersvr::WeatherData::WeatherData()
-	: WeatherData {0, 0, "", "", 0, 0, 0, 0, 0, 0}
+	: WeatherData {0, 0, "", "", 0, 0, 0, 0, 0, 0, 0}
 {}
 
 weathersvr::WeatherData weathersvr::WeatherData::parseJson(web::json::value & json) {
@@ -47,8 +49,13 @@ weathersvr::WeatherData weathersvr::WeatherData::parseJson(web::json::value & js
 	double pressure = currently.at(KEY_PRESSURE).as_double();
 	double humidity = currently.at(KEY_HUMIDIY).as_double();
 	double windSpeed = currently.at(KEY_WINDSPEED).as_double();
+  double windBearing; // Not returned if wind speed is 0.
+  if (windSpeed > 0.001)
+    windBearing = currently.at(KEY_WINDBEARING).as_double();
+  else
+    windBearing = 0;
 	double cloudCover = currently.at(KEY_CLOUD_COVER).as_double();
 
-	return WeatherData(latitude, longitude, timezone, icon, temperature, apparentTemperature, 
-		pressure, humidity, windSpeed, cloudCover);
+	return WeatherData(latitude, longitude, timezone, icon, temperature, apparentTemperature,
+		humidity, pressure, windSpeed, windBearing, cloudCover);
 }

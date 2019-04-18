@@ -19,7 +19,7 @@ namespace weathersvr {
 	public:
 		WeatherData(double latitude, double longitude, std::string timezone, std::string icon,
 			double temperature, double apparentTemperature, double humidity, double pressure, 
-			double windSpeed, double cloudCover);
+			double windSpeed, double windBearing, double cloudCover);
 		WeatherData();
 
 		/*
@@ -39,6 +39,7 @@ namespace weathersvr {
 		double getCurrentlyHumidity() const { return humidity; }
 		double getCurrentlyPressure() const { return pressure; }
 		double getCurrentlyWindSpeed() const { return windSpeed; }
+    double getCurrentlyWindBearing() const { return windBearing; }
 		double getCurrentlyCloudCover() const { return cloudCover; }
 
 		// Constants Representing the string(key) of the pair string:value of JSON objects.
@@ -51,6 +52,7 @@ namespace weathersvr {
 		static const utility::string_t KEY_HUMIDIY;
 		static const utility::string_t KEY_PRESSURE;
 		static const utility::string_t KEY_WINDSPEED;
+    static const utility::string_t KEY_WINDBEARING;
 		static const utility::string_t KEY_CLOUD_COVER;
 		static const utility::string_t KEY_CURRENTLY;
 
@@ -64,6 +66,7 @@ namespace weathersvr {
 		static char BROWSE_HUMIDITY[];
 		static char BROWSE_PRESSURE[];
 		static char BROWSE_WIND_SPEED[];
+    static char BROWSE_WIND_BEARING[];
 		static char BROWSE_CLOUD_COVER[];
 
 	private:
@@ -76,6 +79,7 @@ namespace weathersvr {
 		double humidity;
 		double pressure;
 		double windSpeed;
+    double windBearing;
 		double cloudCover;
 	};
 }

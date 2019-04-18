@@ -58,10 +58,16 @@ static void updateWeatherVariables(UA_DataValue *dataValue, const weathersvr::We
 		UA_Double pressureValue = weatherData.getCurrentlyPressure();
 		UA_Variant_setScalarCopy(&dataValue->value, &pressureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
-	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
+	} 
+  else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
 		UA_Double windSpeedValue = weatherData.getCurrentlyWindSpeed();
 		UA_Variant_setScalarCopy(&dataValue->value, &windSpeedValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
+  }
+  else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_BEARING) {
+    UA_Double windBearingValue = weatherData.getCurrentlyWindBearing();
+    UA_Variant_setScalarCopy(&dataValue->value, &windBearingValue, &UA_TYPES[UA_TYPES_DOUBLE]);
+    dataValue->hasValue = true;
 	} else if (weatherVariableName == weathersvr::WeatherData::BROWSE_CLOUD_COVER) {
 		UA_Double cloudCoverValue = weatherData.getCurrentlyCloudCover();
 		UA_Variant_setScalarCopy(&dataValue->value, &cloudCoverValue, &UA_TYPES[UA_TYPES_DOUBLE]);
@@ -94,7 +100,7 @@ static UA_StatusCode readRequest(UA_Server *server, const UA_NodeId *sessionId, 
 
 		/*
 		The location name MAY be returned at position 13 until the first '.' after that.
-		When looking for a specifi location, check if it was found (iterator) because some locations has '.' in its name.
+		When looking for a specific location, check if it was found (iterator) because some locations has '.' in its name.
 		In this case, if the location (iterator) was not found, we continue searching for the next '.' until find the correct location name.
 		*/
 		size_t posDot = nodeIdName.find(".", 13);
@@ -313,6 +319,23 @@ static void requestWeather(UA_Server* server, weathersvr::LocationData& location
 		UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
 		UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_WIND_SPEED),
 		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), windSpeedVarAttr, windSpeedVarDataSource, NULL, NULL);
+
+  // #################### Wind Bearing variable node
+  std::string windBearingNameId = parentNameId + "." + weathersvr::WeatherData::BROWSE_WIND_BEARING;
+  UA_NodeId windBearingVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
+    windBearingNameId.c_str());
+  UA_VariableAttributes windBearingVarAttr = UA_VariableAttributes_default;
+  char windBearingVarAttrDesc[] = "The direction that the wind is coming from in degrees, with true north at 0° and progressing clockwise. (If windSpeed is zero, then this value should be ignored.)";
+  windBearingVarAttr.description = UA_LOCALIZEDTEXT(locale, windBearingVarAttrDesc);
+  windBearingVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::WeatherData::BROWSE_WIND_BEARING);
+
+  UA_DataSource windBearingVarDataSource;
+  windBearingVarDataSource.read = readRequest;
+  windBearingVarDataSource.write = NULL;
+  UA_Server_addDataSourceVariableNode(server, windBearingVarNodeId, parentNodeId,
+    UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+    UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_WIND_BEARING),
+    UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), windBearingVarAttr, windBearingVarDataSource, NULL, NULL);
 
 	// #################### Cloud cover variable node
 	std::string cloudCoverNameId = parentNameId + "." + weathersvr::WeatherData::BROWSE_CLOUD_COVER;
