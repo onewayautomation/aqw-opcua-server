@@ -28,6 +28,9 @@ bool weathersvr::Settings::setup(char * fileName) {
 		auto jsonFile = web::json::value::parse(inputFile);
 		validateValuesFromDarkSky(jsonFile.at(API_DARKSKY));
 
+    this->port_number = jsonFile.at(U("opc_ua_server")).at(U("port-number")).as_integer();
+    this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
+    this->hostName = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("host-name")).as_string());
 		std::cout << "Build completed successfully!!!" << std::endl;
 	} 
   catch (const web::json::json_exception& e) 
@@ -48,6 +51,9 @@ void weathersvr::Settings::setDefaultValues() {
 	keyApiDarksky = U("");
 	units = U("si");
 	intervalDownloadWeatherData = 10;
+  port_number = 48484;
+  endpointUrl = "opc.tcp://localhost:48484";
+  hostName = "localhost";
 }
 
 void weathersvr::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {

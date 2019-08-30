@@ -1,4 +1,12 @@
+//#include <open62541/server_config_default.h>
+//#include <open62541/types.h>
+//#include <open62541/plugin/log_stdout.h>
+//#include <open62541/plugin/nodestore.h>
+//#include <open62541/server_config.h>
+//#include <open62541/server.h>
+
 #include "open62541.h"
+
 #include "Settings.h"
 #include "WebService.h"
 #include <fstream>
@@ -647,10 +655,23 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, stopHandler);
 	signal(SIGTERM, stopHandler);
 
+	//UA_Server *server = UA_Server_new();
+	//UA_ServerConfig *config = UA_Server_getConfig(server);
+
+	//UA_Nodestore* ns = (UA_Nodestore*) UA_Server_getNodestore(server);
+
+	//defaultGetNode = ns->getNode;
+
+	//ns->getNode = customGetNode;
+
+	//UA_ServerConfig_setDefault(config);
+
 	UA_ServerConfig *config = UA_ServerConfig_new_default();
 	defaultGetNode = config->nodestore.getNode;
 	config->nodestore.getNode = customGetNode;
 	UA_Server *server = UA_Server_new(config);
+
+
 	webService->setServer(server);
 
 	/* Should the server networklayer block (with a timeout) until a message
@@ -680,6 +701,8 @@ int main(int argc, char* argv[]) {
 	}
 	retval = UA_Server_run_shutdown(server);
 	UA_Server_delete(server);
-	UA_ServerConfig_delete(config);
+	
+	//UA_ServerConfig_clean(config);
+
 	return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
 }
