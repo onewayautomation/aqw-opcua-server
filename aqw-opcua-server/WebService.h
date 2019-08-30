@@ -1,6 +1,5 @@
 #pragma once
 #include "cpprest/http_client.h"
-//#include "open62541/server.h"
 #include "open62541.h"
 #include "Settings.h"
 #include "CountryData.h"
@@ -11,7 +10,7 @@ namespace weathersvr {
 	class WebService {
 	public:
 
-		// ########## Method to fetch data from the APIs services.
+		// ########## Methos to fetch data from the APIs services.
 		/*
 		Makes a http requests to an api web service to fetch all the countries.
 		@return web::json::value - A JSON value as an array containing all the countries objects.

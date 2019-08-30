@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aqw-opcua-server", "aqw-opcua-server\aqw-opcua-server.vcxproj", "{3DB307EA-E49B-4434-920D-3289273E0FB2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{95436540-D3BA-4CBC-A03C-3D15C5FC42EF}"
+	ProjectSection(SolutionItems) = preProject
+		settings.json = settings.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

@@ -20,23 +20,47 @@ weathersvr::CountryData::CountryData(std::string code)
 {}
 
 weathersvr::CountryData weathersvr::CountryData::parseJson(web::json::value& json) {
-	return CountryData(
-		utility::conversions::to_utf8string(json.at(KEY_NAME).as_string()), // Converts from wstring to string
-		utility::conversions::to_utf8string(json.at(KEY_CODE).as_string()),
-		json.at(KEY_CITIES).as_integer(),
-		json.at(KEY_LOCATIONS).as_integer());;
+
+	std::string name;
+	std::string code;
+	uint32_t cities;
+	uint32_t locations;
+
+	try
+	{
+		name = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
+		code = utility::conversions::to_utf8string(json.at(KEY_CODE).as_string());
+		cities = json.at(KEY_CITIES).as_integer();
+		locations = json.at(KEY_LOCATIONS).as_integer();
+	}
+	catch (std::exception & ex)
+	{
+		std::cout << "Exception caught: " << ex.what() << std::endl;
+	}
+	return CountryData(name, code, cities, locations);
 }
 
 std::vector<weathersvr::CountryData> weathersvr::CountryData::parseJsonArray(web::json::value& jsonArray) {
 	std::vector<CountryData> vectorAllCountries;
-	if (jsonArray.is_array()) {
-		for (size_t i {0}; i < jsonArray.size(); i++) {
-			auto country = jsonArray[i];
-			CountryData countryData = CountryData::parseJson(country);
-			vectorAllCountries.push_back(countryData);
+	try
+	{
+		if (jsonArray.is_array()) {
+			for (size_t i{ 0 }; i < jsonArray.size(); i++) {
+				auto country = jsonArray[i];
+				CountryData countryData = CountryData::parseJson(country);
+				if (!countryData.name.empty() && !countryData.code.empty())
+				{
+					vectorAllCountries.push_back(countryData);
+				}
+			}
 		}
 	}
+	catch (std::exception& ex)
+	{
+		throw ex;
+	}
 
+	std::cout << "Retrieved information for " << vectorAllCountries.size() << " countries" << std::endl;
 	return vectorAllCountries;
 }
 

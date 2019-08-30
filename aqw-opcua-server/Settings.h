@@ -23,7 +23,12 @@ namespace weathersvr {
 		static const utility::string_t PARAM_NAME_API_DARKSKY_API_KEY;
 		static const utility::string_t PARAM_NAME_API_DARKSKY_UNITS;
 		static const utility::string_t PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA;
-	private:
+
+    int port_number;
+    std::string endpointUrl;
+    std::string hostName;
+
+  private:
 		void setDefaultValues();
 		/*
 		Check if the values present in the settings.json file related to the dark sky api are valid before set them to respective variables. If is not valid, the default values will be kept.
@@ -35,5 +40,7 @@ namespace weathersvr {
 		utility::string_t keyApiDarksky;
 		utility::string_t units;
 		short intervalDownloadWeatherData;
+
+
 	};
 }

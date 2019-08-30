@@ -32566,7 +32566,7 @@ periodicServerRegister(UA_Server *server, void *data) {
     if (cb->discovery_server_url != NULL)
       server_url = cb->discovery_server_url;
     else
-      server_url = custom_endpoint_url; //  "opc.tcp://opcuaserver.com:48484";
+      server_url = custom_endpoint_url; 
 
     /* Register
        You can also use a semaphore file. That file must exist. When the file is

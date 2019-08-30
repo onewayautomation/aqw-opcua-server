@@ -1,6 +1,8 @@
 {
   "opc_ua_server": {
-
+	"port-number":48484,
+	"endpoint-url": "opc.tcp://localhost:48484",
+	"host-name": "localhost"
   },
   "openaq_api": {
 
