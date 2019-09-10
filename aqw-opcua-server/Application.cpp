@@ -1,32 +1,14 @@
-//#include <open62541/server_config_default.h>
-//#include <open62541/types.h>
-//#include <open62541/plugin/log_stdout.h>
-//#include <open62541/plugin/nodestore.h>
-//#include <open62541/server_config.h>
-//#include <open62541/server.h>
-
-
-//for amalgamated version
-#include "open62541.h"
-
-
-/* // build version
-
-#include "open62541/server.h"
-#include "open62541/server_config_default.h"
-#include "open62541/plugin/log_stdout.h" */
-
-/*   !!! Warning !!!
- *
- * If you are not developing a nodestore plugin, then you should not work with
- * the definitions from this file directly. The underlying node structures are
- * not meant to be used directly by end users. Please use the public server API
- * / OPC UA services to interact with the information model. */
-
-//#include "open62541/plugin/nodestore.h" 
-
 #include "Settings.h"
 #include "WebService.h"
+
+#include <open62541/ua_types.h>
+#include <open62541/ua_log_stdout.h>
+#include <open62541/ua_plugin_log.h>
+#include <open62541/ua_plugin_nodestore.h>
+#include <open62541/ua_server_config.h>
+#include <open62541/ua_server.h>
+#include <open62541/ua_config_default.h>
+
 #include <fstream>
 #include <signal.h>
 #include <stdlib.h>
@@ -84,7 +66,7 @@ static void updateWeatherVariables(UA_DataValue *dataValue, const weathersvr::We
 		UA_Double pressureValue = weatherData.getCurrentlyPressure();
 		UA_Variant_setScalarCopy(&dataValue->value, &pressureValue, &UA_TYPES[UA_TYPES_DOUBLE]);
 		dataValue->hasValue = true;
-	} 
+	}
   else if (weatherVariableName == weathersvr::WeatherData::BROWSE_WIND_SPEED) {
 		UA_Double windSpeedValue = weatherData.getCurrentlyWindSpeed();
 		UA_Variant_setScalarCopy(&dataValue->value, &windSpeedValue, &UA_TYPES[UA_TYPES_DOUBLE]);
@@ -113,7 +95,7 @@ static UA_StatusCode readRequest(UA_Server *server, const UA_NodeId *sessionId, 
 	if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == weathersvr::WebService::OPC_NS_INDEX) {
 		size_t length = nodeId->identifier.string.length;
 		UA_Byte* data = nodeId->identifier.string.data;
-		/* 
+		/*
 		It needs to get the country code and location name from the node id to look for them in the web service's vector.
 		The NodeId is composed as: Countries.CountryCode.LocationName.WeatherVariable
 		The country code will be returned at position 10 (counting starting from pos 0) and 2 letters.
@@ -184,7 +166,7 @@ static void requestWeather(UA_Server* server, weathersvr::LocationData& location
 	/* Flag to control how many time this the function requestWeather is called during the get node method of the UA_ServerConfig. */
 	location.setIsAddingWeatherToAddressSpace(true);
 
-	// #################### Latitude variable node 
+	// #################### Latitude variable node
 	/* Creates the identifier for the node id of the new variable node class
 	The identifier for the node id of every variable will be: Countries.CountryCode.LocationName.Variable */
 	std::string parentNameId = static_cast<std::string>(weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID)
@@ -207,7 +189,7 @@ static void requestWeather(UA_Server* server, weathersvr::LocationData& location
 		UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_LATITUDE),
 		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), latitudeVarAttr, latitudeVarDataSource, NULL, NULL);
 
-	// #################### Longitude variable node 
+	// #################### Longitude variable node
 	/* Creates the identifier for the node id of the new variable node class
 	The identifier for the node id of every variable will be: Countries.CountryCode.LocationName.Variable */
 	std::string longitudeNameId = parentNameId + "." + weathersvr::WeatherData::BROWSE_LONGITUDE;
@@ -394,7 +376,8 @@ in this function. Locations will be added to it.
 */
 static void requestLocations(UA_Server* server, weathersvr::CountryData& country, UA_NodeId parentNodeId) {
 	try {
-		webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response) {
+        // ReSharper disable once CppExpressionWithoutSideEffects
+        webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response) {
 			country.setLocations(weathersvr::LocationData::parseJsonArray(response));
 
 			for (size_t i {0}; i < country.getLocations().size(); i++) {
@@ -609,7 +592,7 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 			}
 			// Only try to download weather data if locations has been added to the country being read.
 			if (itCountry->getIsInitialized() && itCountry->getLocations().size() > 0) {
-				/* 
+				/*
 				If find the dot after beginning of location's name, it MAY mean the client is requesting to read a specific location or it just mean the location name has a '.' WITHIN the name.
 				For example, the following nodes id do not mean the client is requesting to read the location:
 				Countries.CA.Brandon
@@ -627,7 +610,7 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 					// Search for the location in the list of locations inside the country of the web service.
 					auto searchLocation = weathersvr::LocationData {locationName, countryCode};
 					auto itLocation = std::find(itCountry->getLocations().begin(), itCountry->getLocations().end(), searchLocation);
-					
+
 					/* While the location is not found, continue checking for dots within its name. */
 					while (itLocation == itCountry->getLocations().end()) {
 						posDot = nodeIdName.find(".", posDot + 1);
@@ -695,7 +678,7 @@ int main(int argc, char* argv[]) {
 	UA_ServerConfig *config = UA_ServerConfig_new_default();
 	defaultGetNode = config->nodestore.getNode;
 	config->nodestore.getNode = customGetNode;
-	
+
 	UA_Server *server = UA_Server_new(config);
 
 
@@ -728,9 +711,9 @@ int main(int argc, char* argv[]) {
 	}
 	retval = UA_Server_run_shutdown(server);
 	UA_Server_delete(server);
-	
+
 	//UA_ServerConfig_clean(config);
-	
+
 	//0.3 version. no config delete in 1.0rc5
 
 	UA_ServerConfig_delete(config);
