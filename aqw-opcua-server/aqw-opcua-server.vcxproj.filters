@@ -24,9 +24,6 @@
     <ClCompile Include="LocationData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="open62541.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WeatherData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,6 +31,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="open62541.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="open62541.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

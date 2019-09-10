@@ -20,7 +20,9 @@ pplx::task<web::json::value> weathersvr::WebService::fetchAllCountries() {
 	web::uri_builder uriBuilder(ENDPOINT_API_OPENAQ);
 	uriBuilder.append_path(PATH_API_OPENAQ_COUNTRIES);
 
+	//something like https://api.openaq.org/v1/countries inside - can open in the browser to check data we are about to GET
 	web::http::client::http_client client(uriBuilder.to_string());
+
 	return client.request(web::http::methods::GET)
 		.then([](web::http::http_response requestResponse)
 	{
@@ -30,8 +32,15 @@ pplx::task<web::json::value> weathersvr::WebService::fetchAllCountries() {
 	})
 		.then([](web::json::value jsonValue)
 	{
+		//complete jsonValue with meta data
+		//std::wcout << jsonValue.serialize() << std::endl;
+
 		std::cout << "JSON extracted from fetchAllCountries() completed!" << std::endl;
 		auto results = jsonValue.at(U("results"));
+
+		//just the "results" from jsonValue
+		//std::wcout << results.serialize() << std::endl;
+
 		return results;
 	});
 }

@@ -10,7 +10,7 @@ namespace weathersvr {
 	class WebService {
 	public:
 
-		// ########## Methos to fetch data from the APIs services.
+		// ########## Methods to fetch data from the APIs services.
 		/*
 		Makes a http requests to an api web service to fetch all the countries.
 		@return web::json::value - A JSON value as an array containing all the countries objects.

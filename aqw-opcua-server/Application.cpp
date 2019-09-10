@@ -5,7 +5,25 @@
 //#include <open62541/server_config.h>
 //#include <open62541/server.h>
 
+
+//for amalgamated version
 #include "open62541.h"
+
+
+/* // build version
+
+#include "open62541/server.h"
+#include "open62541/server_config_default.h"
+#include "open62541/plugin/log_stdout.h" */
+
+/*   !!! Warning !!!
+ *
+ * If you are not developing a nodestore plugin, then you should not work with
+ * the definitions from this file directly. The underlying node structures are
+ * not meant to be used directly by end users. Please use the public server API
+ * / OPC UA services to interact with the information model. */
+
+//#include "open62541/plugin/nodestore.h" 
 
 #include "Settings.h"
 #include "WebService.h"
@@ -265,7 +283,7 @@ static void requestWeather(UA_Server* server, weathersvr::LocationData& location
 	UA_NodeId apparentTemperatureVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
 		apparentTemperatureNameId.c_str());
 	UA_VariableAttributes apparentTemperatureVarAttr = UA_VariableAttributes_default;
-	char apparentTemperatureVarAttrDesc[] = "The apparent (or “feels like”) temperature in degrees Celsius (if units=si during request) or Fahrenheit.";
+	char apparentTemperatureVarAttrDesc[] = "The apparent (or ï¿½feels likeï¿½) temperature in degrees Celsius (if units=si during request) or Fahrenheit.";
 	apparentTemperatureVarAttr.description = UA_LOCALIZEDTEXT(locale, apparentTemperatureVarAttrDesc);
 	apparentTemperatureVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::WeatherData::BROWSE_APPARENT_TEMPERATURE);
 
@@ -328,19 +346,19 @@ static void requestWeather(UA_Server* server, weathersvr::LocationData& location
 		UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_WIND_SPEED),
 		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), windSpeedVarAttr, windSpeedVarDataSource, NULL, NULL);
 
-  // #################### Wind Bearing variable node
-  std::string windBearingNameId = parentNameId + "." + weathersvr::WeatherData::BROWSE_WIND_BEARING;
-  UA_NodeId windBearingVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
-    windBearingNameId.c_str());
-  UA_VariableAttributes windBearingVarAttr = UA_VariableAttributes_default;
-  char windBearingVarAttrDesc[] = "The direction that the wind is coming from in degrees, with true north at 0° and progressing clockwise. (If windSpeed is zero, then this value should be ignored.)";
-  windBearingVarAttr.description = UA_LOCALIZEDTEXT(locale, windBearingVarAttrDesc);
-  windBearingVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::WeatherData::BROWSE_WIND_BEARING);
+    // #################### Wind Bearing variable node
+    std::string windBearingNameId = parentNameId + "." + weathersvr::WeatherData::BROWSE_WIND_BEARING;
+    UA_NodeId windBearingVarNodeId = UA_NODEID_STRING_ALLOC(weathersvr::WebService::OPC_NS_INDEX,
+      windBearingNameId.c_str());
+    UA_VariableAttributes windBearingVarAttr = UA_VariableAttributes_default;
+    char windBearingVarAttrDesc[] = "The direction that the wind is coming from in degrees, with true north at 0ï¿½ and progressing clockwise. (If windSpeed is zero, then this value should be ignored.)";
+    windBearingVarAttr.description = UA_LOCALIZEDTEXT(locale, windBearingVarAttrDesc);
+    windBearingVarAttr.displayName = UA_LOCALIZEDTEXT(locale, weathersvr::WeatherData::BROWSE_WIND_BEARING);
 
-  UA_DataSource windBearingVarDataSource;
-  windBearingVarDataSource.read = readRequest;
-  windBearingVarDataSource.write = NULL;
-  UA_Server_addDataSourceVariableNode(server, windBearingVarNodeId, parentNodeId,
+    UA_DataSource windBearingVarDataSource;
+    windBearingVarDataSource.read = readRequest;
+    windBearingVarDataSource.write = NULL;
+    UA_Server_addDataSourceVariableNode(server, windBearingVarNodeId, parentNodeId,
     UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
     UA_QUALIFIEDNAME(weathersvr::WebService::OPC_NS_INDEX, weathersvr::WeatherData::BROWSE_WIND_BEARING),
     UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), windBearingVarAttr, windBearingVarDataSource, NULL, NULL);
@@ -665,10 +683,19 @@ int main(int argc, char* argv[]) {
 	//ns->getNode = customGetNode;
 
 	//UA_ServerConfig_setDefault(config);
+	/* 1.0rc5 version
+
+	UA_Server* server = UA_Server_new();
+	UA_ServerConfig_setDefault(UA_Server_getConfig(server));
+
+	*/
+
+	// 0.3 version
 
 	UA_ServerConfig *config = UA_ServerConfig_new_default();
 	defaultGetNode = config->nodestore.getNode;
 	config->nodestore.getNode = customGetNode;
+	
 	UA_Server *server = UA_Server_new(config);
 
 
@@ -703,6 +730,10 @@ int main(int argc, char* argv[]) {
 	UA_Server_delete(server);
 	
 	//UA_ServerConfig_clean(config);
+	
+	//0.3 version. no config delete in 1.0rc5
+
+	UA_ServerConfig_delete(config);
 
 	return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
 }

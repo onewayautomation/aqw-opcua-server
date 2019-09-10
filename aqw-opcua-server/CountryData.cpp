@@ -23,8 +23,12 @@ weathersvr::CountryData weathersvr::CountryData::parseJson(web::json::value& jso
 
 	std::string name;
 	std::string code;
-	uint32_t cities;
-	uint32_t locations;
+	// added default values so there are no unitialized variable errors when parsing fails
+	uint32_t cities = 0;
+	uint32_t locations = 0;
+
+	//what's inside the json?
+	//std::wcout << json.serialize() << std::endl;
 
 	try
 	{
@@ -33,9 +37,13 @@ weathersvr::CountryData weathersvr::CountryData::parseJson(web::json::value& jso
 		cities = json.at(KEY_CITIES).as_integer();
 		locations = json.at(KEY_LOCATIONS).as_integer();
 	}
-	catch (std::exception & ex)
+	catch (std::exception& ex)
 	{
-		std::cout << "Exception caught: " << ex.what() << std::endl;
+		std::cout << "Exception caught while parsing JSON file: " << ex.what() << std::endl
+			<< "name (default - empty) = " << name << std::endl
+			<< "code (default - empty) = " << code << std::endl
+			<< "cities (default - 0) = " << cities << std::endl
+			<< "locations (default - 0) = " << locations << std::endl;
 	}
 	return CountryData(name, code, cities, locations);
 }
@@ -51,6 +59,10 @@ std::vector<weathersvr::CountryData> weathersvr::CountryData::parseJsonArray(web
 				if (!countryData.name.empty() && !countryData.code.empty())
 				{
 					vectorAllCountries.push_back(countryData);
+				}
+				else
+				{
+					std::cout << "Country name or code is empty - skipped one entry." << std::endl;
 				}
 			}
 		}

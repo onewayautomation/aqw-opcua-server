@@ -16,10 +16,10 @@ bool weathersvr::Settings::setup(char * fileName) {
 		std::fstream inputFile {fileName};
 
 		std::cout << "################################################" << std::endl;
-		if (!inputFile) 
-    {
+		if (!inputFile)
+		{
 			std::cerr << "Could not open the settings file: " << fileName << std::endl;
-			std::cerr << "Check if the file name and extension are correctly. Also check if the path to the file was passed correctly." << std::endl;
+			std::cerr << "Check if the file name and extension are correct. Also check if the path to the file was passed correctly." << std::endl;
 			std::cout << "################################################" << std::endl << std::endl;
 			return false;
 		}
@@ -28,15 +28,14 @@ bool weathersvr::Settings::setup(char * fileName) {
 		auto jsonFile = web::json::value::parse(inputFile);
 		validateValuesFromDarkSky(jsonFile.at(API_DARKSKY));
 
-    this->port_number = jsonFile.at(U("opc_ua_server")).at(U("port-number")).as_integer();
-    this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
-    this->hostName = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("host-name")).as_string());
+        this->port_number = jsonFile.at(U("opc_ua_server")).at(U("port-number")).as_integer();
+		this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
+		this->hostName = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("host-name")).as_string());
 		std::cout << "Build completed successfully!!!" << std::endl;
 	} 
-  catch (const web::json::json_exception& e) 
-  {
+    catch (const web::json::json_exception& e) {
 		std::cerr << "Error parsing the settings json file: " << e.what() << std::endl;
-    return false;
+        return false;
 	}
 
 	std::wcout << "Weather data units: " << units << std::endl;
