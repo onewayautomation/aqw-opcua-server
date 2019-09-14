@@ -1,29 +1,6 @@
-//#include <open62541/server_config_default.h>
-//#include <open62541/types.h>
-//#include <open62541/plugin/log_stdout.h>
-//#include <open62541/plugin/nodestore.h>
-//#include <open62541/server_config.h>
-//#include <open62541/server.h>
-
-
 //for amalgamated version
 #include "open62541.h"
 
-
-/* // build version
-
-#include "open62541/server.h"
-#include "open62541/server_config_default.h"
-#include "open62541/plugin/log_stdout.h" */
-
-/*   !!! Warning !!!
- *
- * If you are not developing a nodestore plugin, then you should not work with
- * the definitions from this file directly. The underlying node structures are
- * not meant to be used directly by end users. Please use the public server API
- * / OPC UA services to interact with the information model. */
-
-//#include "open62541/plugin/nodestore.h" 
 
 #include "Settings.h"
 #include "WebService.h"

@@ -1,10 +1,12 @@
 #pragma once
-#include "cpprest/http_client.h"
-#include "open62541.h"
+
 #include "Settings.h"
 #include "CountryData.h"
 #include "LocationData.h"
 #include "WeatherData.h"
+
+#include "open62541.h"
+#include <cpprest/http_client.h>
 
 namespace weathersvr {
 	class WebService {
