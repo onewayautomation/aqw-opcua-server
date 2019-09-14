@@ -50,15 +50,32 @@ void weathersvr::Settings::setDefaultValues() {
 	keyApiDarksky = U("");
 	units = U("si");
 	intervalDownloadWeatherData = 10;
-  port_number = 48484;
-  endpointUrl = "opc.tcp://localhost:48484";
-  hostName = "localhost";
+	port_number = 48484;
+	endpointUrl = "opc.tcp://localhost:48484";
+	hostName = "localhost";
 }
 
 void weathersvr::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {
 	// Set the values from the Json file's DarkSky object.
 
 	keyApiDarksky = jsonObj.at(PARAM_NAME_API_DARKSKY_API_KEY).as_string();
+
+	//If empty or has spaces - invalid key for sure. Need to track and inform that no weather data will be available
+
+	if (keyApiDarksky.empty()) {
+		validkeyApiDarksky = false;
+		std::cout << "Empty Dark Sky API key. No weather data will be available" << std::endl;
+	}
+	else {
+		for (int i = 0; i < keyApiDarksky.length(); i++) {
+			if (iswspace(keyApiDarksky[i])) {
+				validkeyApiDarksky = false;
+				std::cout << "Dark Sky API key has spaces - invalid entry. No weather data will be available" << std::endl;
+			}
+		}
+	}
+
+
 	/* `units` - Return weather conditions in the requested units, should be one of the following:
 	auto: automatically select units based on geographic location
 	ca: same as si, except that windSpeed and windGust are in kilometers per hour

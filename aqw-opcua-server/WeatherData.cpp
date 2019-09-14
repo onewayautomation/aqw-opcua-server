@@ -49,11 +49,11 @@ weathersvr::WeatherData weathersvr::WeatherData::parseJson(web::json::value & js
 	double pressure = currently.at(KEY_PRESSURE).as_double();
 	double humidity = currently.at(KEY_HUMIDIY).as_double();
 	double windSpeed = currently.at(KEY_WINDSPEED).as_double();
-  double windBearing; // Not returned if wind speed is 0.
-  if (windSpeed > 0.001)
-    windBearing = currently.at(KEY_WINDBEARING).as_double();
-  else
-    windBearing = 0;
+	double windBearing; // Not returned if wind speed is 0.
+	if (windSpeed > 0.001)
+		windBearing = currently.at(KEY_WINDBEARING).as_double();
+	else
+		windBearing = 0;
 	double cloudCover = currently.at(KEY_CLOUD_COVER).as_double();
 
 	return WeatherData(latitude, longitude, timezone, icon, temperature, apparentTemperature,
