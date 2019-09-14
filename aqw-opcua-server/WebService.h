@@ -5,9 +5,9 @@
 #include "LocationData.h"
 #include "WeatherData.h"
 
-#include <cpprest/http_client.h>
+#include "open62541.h"
 
-#include <open62541/ua_server.h>
+#include <cpprest/http_client.h>
 
 namespace weathersvr {
 	class WebService {

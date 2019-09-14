@@ -1,13 +1,7 @@
 #include "Settings.h"
 #include "WebService.h"
 
-#include <open62541/ua_types.h>
-#include <open62541/ua_log_stdout.h>
-#include <open62541/ua_plugin_log.h>
-#include <open62541/ua_plugin_nodestore.h>
-#include <open62541/ua_server_config.h>
-#include <open62541/ua_server.h>
-#include <open62541/ua_config_default.h>
+#include "open62541.h"
 
 #include <fstream>
 #include <signal.h>
