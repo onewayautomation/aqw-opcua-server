@@ -22,11 +22,7 @@ source_group("Sources" FILES ${sources})
 
 add_executable(aqw-opcua-server ${headers} ${sources})
 
-target_link_libraries(aqw-opcua-server PRIVATE
-  cpprestsdk::cpprest
-  cpprestsdk::cpprestsdk_zlib_internal
-  cpprestsdk::cpprestsdk_boost_internal
-  cpprestsdk::cpprestsdk_brotli_internal)
+target_link_libraries(aqw-opcua-server PRIVATE cpprestsdk::cpprest)
 
 if (WIN32)
   target_link_libraries(aqw-opcua-server PRIVATE ws2_32)

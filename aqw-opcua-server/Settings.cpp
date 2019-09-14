@@ -38,7 +38,7 @@ bool weathersvr::Settings::setup(char * fileName) {
         return false;
 	}
 
-	std::wcout << "Weather data units: " << units << std::endl;
+	std::cout << "Weather data units: " << utility::conversions::to_utf8string(units) << std::endl;
 	std::cout << "Interval in minutes for automatic update of weather data: " << intervalDownloadWeatherData << std::endl;
 
 	std::cout << "################################################" << std::endl << std::endl;
