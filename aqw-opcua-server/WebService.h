@@ -37,7 +37,7 @@ namespace weathersvr {
 		Check the WeatherData Class to see the JSON representation.
 		*/
 		pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
-		
+
 		void setServer(UA_Server* uaServer);
 		void setSettings(const Settings& settingsObj);
 		void setAllCountries(const std::vector<CountryData>& allCountries);
@@ -45,7 +45,7 @@ namespace weathersvr {
 		UA_Server* getServer() { return server; }
 		const Settings& getSettings() { return settings; }
 		std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
-	
+
 		// Constants endpoints, keys, paths, querys etc to all the API services.
 		static const uint16_t OPC_NS_INDEX;
 		static const utility::string_t ENDPOINT_API_OPENAQ;
@@ -63,9 +63,9 @@ namespace weathersvr {
 		static const std::string PARAM_VALUE_API_DARKSKY_DAILY;
 
 		/* DarkSky URI example:
-		https://api.darksky.net/forecast/KEY/latitude,longitude?exclude=minutely,hourly,daily?units=si 
-		With the URI above, the request returns the current weather conditions, excluding a 
-		minute-by-minute forecast for the next hour (where available), an hour-by-hour forecast for the 
+		https://api.darksky.net/forecast/KEY/latitude,longitude?exclude=minutely,hourly,daily?units=si
+		With the URI above, the request returns the current weather conditions, excluding a
+		minute-by-minute forecast for the next hour (where available), an hour-by-hour forecast for the
 		next 48 hours, and a day-by-day forecast for the next week.
 		The weather information are also returned in the SI units.
 		*/
