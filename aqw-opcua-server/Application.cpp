@@ -1,7 +1,9 @@
+//for amalgamated version
+#include "open62541.h"
+
+
 #include "Settings.h"
 #include "WebService.h"
-
-#include "open62541.h"
 
 #include <fstream>
 #include <signal.h>

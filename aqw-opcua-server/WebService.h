@@ -6,7 +6,6 @@
 #include "WeatherData.h"
 
 #include "open62541.h"
-
 #include <cpprest/http_client.h>
 
 namespace weathersvr {
