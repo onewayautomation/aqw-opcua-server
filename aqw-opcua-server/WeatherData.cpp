@@ -26,36 +26,36 @@ char weathersvr::WeatherData::BROWSE_WIND_BEARING[] = "WindBearing";
 char weathersvr::WeatherData::BROWSE_CLOUD_COVER[] = "CloudCover";
 
 weathersvr::WeatherData::WeatherData(double latitude, double longitude, std::string timezone, std::string icon, 
-	double temperature, double apparentTemperature, double humidity, double pressure, double windSpeed, double windBearing, double cloudCover)
-	: latitude {latitude}, longitude {longitude}, timezone {timezone}, icon {icon},
-	temperature {temperature}, apparentTemperature {apparentTemperature}, pressure {pressure}, 
+    double temperature, double apparentTemperature, double humidity, double pressure, double windSpeed, double windBearing, double cloudCover)
+    : latitude {latitude}, longitude {longitude}, timezone {timezone}, icon {icon},
+    temperature {temperature}, apparentTemperature {apparentTemperature}, pressure {pressure}, 
   humidity{ humidity }, windSpeed{ windSpeed }, windBearing{ windBearing }, cloudCover{ cloudCover }
 {}
 
 weathersvr::WeatherData::WeatherData()
-	: WeatherData {0, 0, "", "", 0, 0, 0, 0, 0, 0, 0}
+    : WeatherData {0, 0, "", "", 0, 0, 0, 0, 0, 0, 0}
 {}
 
 weathersvr::WeatherData weathersvr::WeatherData::parseJson(web::json::value & json) {
-	double latitude = json.at(KEY_LATITUDE).as_double();
-	double longitude = json.at(KEY_LONGITUDE).as_double();
-	std::string timezone = utility::conversions::to_utf8string(json.at(KEY_TIMEZONE).as_string()); // Converts from wstring to string
+    double latitude = json.at(KEY_LATITUDE).as_double();
+    double longitude = json.at(KEY_LONGITUDE).as_double();
+    std::string timezone = utility::conversions::to_utf8string(json.at(KEY_TIMEZONE).as_string()); // Converts from wstring to string
 
-	auto currently = json.at(KEY_CURRENTLY);		
+    auto currently = json.at(KEY_CURRENTLY);        
 
-	std::string icon = utility::conversions::to_utf8string(currently.at(KEY_ICON).as_string());
-	double temperature = currently.at(KEY_TEMPERATURE).as_double();
-	double apparentTemperature = currently.at(KEY_APARENT_TEMPERATURE).as_double();
-	double pressure = currently.at(KEY_PRESSURE).as_double();
-	double humidity = currently.at(KEY_HUMIDIY).as_double();
-	double windSpeed = currently.at(KEY_WINDSPEED).as_double();
-	double windBearing; // Not returned if wind speed is 0.
-	if (windSpeed > 0.001)
-		windBearing = currently.at(KEY_WINDBEARING).as_double();
-	else
-		windBearing = 0;
-	double cloudCover = currently.at(KEY_CLOUD_COVER).as_double();
+    std::string icon = utility::conversions::to_utf8string(currently.at(KEY_ICON).as_string());
+    double temperature = currently.at(KEY_TEMPERATURE).as_double();
+    double apparentTemperature = currently.at(KEY_APARENT_TEMPERATURE).as_double();
+    double pressure = currently.at(KEY_PRESSURE).as_double();
+    double humidity = currently.at(KEY_HUMIDIY).as_double();
+    double windSpeed = currently.at(KEY_WINDSPEED).as_double();
+    double windBearing; // Not returned if wind speed is 0.
+    if (windSpeed > 0.001)
+        windBearing = currently.at(KEY_WINDBEARING).as_double();
+    else
+        windBearing = 0;
+    double cloudCover = currently.at(KEY_CLOUD_COVER).as_double();
 
-	return WeatherData(latitude, longitude, timezone, icon, temperature, apparentTemperature,
-		humidity, pressure, windSpeed, windBearing, cloudCover);
+    return WeatherData(latitude, longitude, timezone, icon, temperature, apparentTemperature,
+        humidity, pressure, windSpeed, windBearing, cloudCover);
 }
