@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace weathersvr {
+namespace weatherserver {
     /* A WeatherData Class represents a JSON object returned from the Open AQ Platform API.
     * Examples of json objects represeting weather from the API, excluding some blocks:
     {"latitude":47.035,"longitude":-84.3811,"timezone":"America/Toronto","currently":

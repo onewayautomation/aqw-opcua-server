@@ -8,7 +8,7 @@
 #include "open62541.h"
 #include <cpprest/http_client.h>
 
-namespace weathersvr {
+namespace weatherserver {
     class WebService {
     public:
 

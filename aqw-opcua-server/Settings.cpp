@@ -1,28 +1,32 @@
 #include "Settings.h"
 
-const utility::string_t weathersvr::Settings::OPC_UA_SERVER = U("opc_ua_server");
-const utility::string_t weathersvr::Settings::API_OPENAQ = U("openaq_api");
-const utility::string_t weathersvr::Settings::API_DARKSKY = U("darksky_api");
-const utility::string_t weathersvr::Settings::PARAM_NAME_API_DARKSKY_API_KEY = U("api_key");
-const utility::string_t weathersvr::Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
-const utility::string_t weathersvr::Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
+const utility::string_t weatherserver::Settings::OPC_UA_SERVER = U("opc_ua_server");
+const utility::string_t weatherserver::Settings::API_OPENAQ = U("openaq_api");
+const utility::string_t weatherserver::Settings::API_DARKSKY = U("darksky_api");
+const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_API_KEY = U("api_key");
+const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
+const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
 
-weathersvr::Settings::Settings() {
+const std::string weatherserver::Settings::SETTINGS_FILE_NAME = "settings.json";
+
+weatherserver::Settings::Settings() {
     setDefaultValues();
 }
 
-bool weathersvr::Settings::setup(char * fileName) {
+bool weatherserver::Settings::setup() {
     try {
-        std::fstream inputFile {fileName};
+        std::fstream inputFile {SETTINGS_FILE_NAME};
 
         std::cout << "################################################" << std::endl;
+
         if (!inputFile)
         {
-            std::cerr << "Could not open the settings file: " << fileName << std::endl;
-            std::cerr << "Check if the file name and extension are correct. Also check if the path to the file was passed correctly." << std::endl;
+            std::cerr << "Could not open the settings file: " << SETTINGS_FILE_NAME << std::endl;
+            std::cerr << "Check if the file was copied correctly at build stage." << std::endl;
             std::cout << "################################################" << std::endl << std::endl;
             return false;
         }
+
         std::cout << "Building settings..." << std::endl;
 
         auto jsonFile = web::json::value::parse(inputFile);
@@ -31,8 +35,9 @@ bool weathersvr::Settings::setup(char * fileName) {
         this->port_number = jsonFile.at(U("opc_ua_server")).at(U("port-number")).as_integer();
         this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
         this->hostName = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("host-name")).as_string());
+
         std::cout << "Build completed successfully!!!" << std::endl;
-    } 
+    }
     catch (const web::json::json_exception& e) {
         std::cerr << "Error parsing the settings json file: " << e.what() << std::endl;
         return false;
@@ -46,31 +51,34 @@ bool weathersvr::Settings::setup(char * fileName) {
   return true;
 }
 
-void weathersvr::Settings::setDefaultValues() {
+void weatherserver::Settings::setDefaultValues() {
     keyApiDarksky = U("");
     units = U("si");
     intervalDownloadWeatherData = 10;
     port_number = 48484;
     endpointUrl = "opc.tcp://localhost:48484";
     hostName = "localhost";
+    keyApiDarkskyStatus = false;
 }
 
-void weathersvr::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {
+void weatherserver::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {
     // Set the values from the Json file's DarkSky object.
-
     keyApiDarksky = jsonObj.at(PARAM_NAME_API_DARKSKY_API_KEY).as_string();
 
-    //If empty or has spaces - invalid key for sure. Need to track and inform that no weather data will be available
+    //if no error parsing assume key is ok, but run extra checks below
+    keyApiDarkskyStatus = true;
 
+    //If empty or has spaces - invalid key for sure. Need to track and inform that no weather data will be available
     if (keyApiDarksky.empty()) {
-        validkeyApiDarksky = false;
+        keyApiDarkskyStatus = false;
         std::cout << "Empty Dark Sky API key. No weather data will be available" << std::endl;
     }
     else {
         for (int i = 0; i < keyApiDarksky.length(); i++) {
             if (iswspace(keyApiDarksky[i])) {
-                validkeyApiDarksky = false;
+                keyApiDarkskyStatus = false;
                 std::cout << "Dark Sky API key has spaces - invalid entry. No weather data will be available" << std::endl;
+                break; //one space is enough to call the key invalid
             }
         }
     }

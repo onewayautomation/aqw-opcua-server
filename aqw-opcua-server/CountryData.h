@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace weathersvr {
+namespace weatherserver {
     /* 
     A CountryData Class represents a JSON object returned from the Open AQ Platform API.
     Examples of json objects represeting countries from the API:

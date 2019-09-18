@@ -1,17 +1,17 @@
 #include "LocationData.h"
 
-const utility::string_t weathersvr::LocationData::KEY_NAME = U("location");
-const utility::string_t weathersvr::LocationData::KEY_CITY_NAME = U("city");
-const utility::string_t weathersvr::LocationData::KEY_COUNTRY_CODE = U("country");
-const utility::string_t weathersvr::LocationData::KEY_COORDINATES = U("coordinates");
-const utility::string_t weathersvr::LocationData::KEY_LATITUDE = U("latitude");
-const utility::string_t weathersvr::LocationData::KEY_LONGITUDE = U("longitude");
-const short weathersvr::LocationData::INVALID_LATITUDE = 91;
-const short weathersvr::LocationData::INVALID_LONGITUDE = 181;
+const utility::string_t weatherserver::LocationData::KEY_NAME = U("location");
+const utility::string_t weatherserver::LocationData::KEY_CITY_NAME = U("city");
+const utility::string_t weatherserver::LocationData::KEY_COUNTRY_CODE = U("country");
+const utility::string_t weatherserver::LocationData::KEY_COORDINATES = U("coordinates");
+const utility::string_t weatherserver::LocationData::KEY_LATITUDE = U("latitude");
+const utility::string_t weatherserver::LocationData::KEY_LONGITUDE = U("longitude");
+const short weatherserver::LocationData::INVALID_LATITUDE = 91;
+const short weatherserver::LocationData::INVALID_LONGITUDE = 181;
 
-char weathersvr::LocationData::BROWSE_FLAG_INITIALIZE[] = "FlagInitialize";
+char weatherserver::LocationData::BROWSE_FLAG_INITIALIZE[] = "FlagInitialize";
 
-weathersvr::LocationData::LocationData(std::string name, std::string city, std::string countryCode,    double latitude, double longitude, 
+weatherserver::LocationData::LocationData(std::string name, std::string city, std::string countryCode,    double latitude, double longitude, 
     bool hasBeenReceivedWeatherData, bool isInitialized, bool isAddingWeatherToAddressSpace)
     : name {name}, city {city}, countryCode {countryCode}, latitude {latitude}, longitude {longitude}, 
     hasBeenReceivedWeatherData {hasBeenReceivedWeatherData}, isInitialized {isInitialized}, isAddingWeatherToAddressSpace {isAddingWeatherToAddressSpace}
@@ -19,11 +19,11 @@ weathersvr::LocationData::LocationData(std::string name, std::string city, std::
     readLastTime = std::chrono::system_clock::now();
 }
 
-weathersvr::LocationData::LocationData(std::string name, std::string countryCode)
+weatherserver::LocationData::LocationData(std::string name, std::string countryCode)
     : LocationData {name, "", countryCode, INVALID_LATITUDE, INVALID_LONGITUDE}
 {}
 
-weathersvr::LocationData weathersvr::LocationData::parseJson(web::json::value& json) {
+weatherserver::LocationData weatherserver::LocationData::parseJson(web::json::value& json) {
     // Converts from wstring to string
     std::string lName = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
     std::string lCity = utility::conversions::to_utf8string(json.at(KEY_CITY_NAME).as_string());
@@ -43,7 +43,7 @@ weathersvr::LocationData weathersvr::LocationData::parseJson(web::json::value& j
     return LocationData(lName, lCity, lCountryCode, lLatitude, lLongittude);
 }
 
-std::vector<weathersvr::LocationData> weathersvr::LocationData::parseJsonArray(web::json::value& jsonArray) {
+std::vector<weatherserver::LocationData> weatherserver::LocationData::parseJsonArray(web::json::value& jsonArray) {
     std::vector<LocationData> vectorAllLocations;
     if (jsonArray.is_array()) {
         for (size_t i {0}; i < jsonArray.size(); i++) {
@@ -51,8 +51,8 @@ std::vector<weathersvr::LocationData> weathersvr::LocationData::parseJsonArray(w
             LocationData locationData = LocationData::parseJson(location);
 
             //Only add the location to the vector if has valid coordinates.
-            if (locationData.getLatitude() != weathersvr::LocationData::INVALID_LATITUDE
-                && locationData.getLongitude() != weathersvr::LocationData::INVALID_LONGITUDE)
+            if (locationData.getLatitude() != weatherserver::LocationData::INVALID_LATITUDE
+                && locationData.getLongitude() != weatherserver::LocationData::INVALID_LONGITUDE)
                 vectorAllLocations.push_back(locationData);
         }
     }
@@ -60,34 +60,34 @@ std::vector<weathersvr::LocationData> weathersvr::LocationData::parseJsonArray(w
     return vectorAllLocations;
 }
 
-void weathersvr::LocationData::setHasBeenReceivedWeatherData(const bool received) {
+void weatherserver::LocationData::setHasBeenReceivedWeatherData(const bool received) {
     hasBeenReceivedWeatherData = received;
 }
 
-void weathersvr::LocationData::setIsInitialized(const bool initialized) {
+void weatherserver::LocationData::setIsInitialized(const bool initialized) {
     isInitialized = initialized;
 }
 
-void weathersvr::LocationData::setIsAddingWeatherToAddressSpace(const bool addingWeatherToAddressSpace) {
+void weatherserver::LocationData::setIsAddingWeatherToAddressSpace(const bool addingWeatherToAddressSpace) {
     isAddingWeatherToAddressSpace = addingWeatherToAddressSpace;
 }
 
-void weathersvr::LocationData::setWeatherData(const WeatherData weather) {
+void weatherserver::LocationData::setWeatherData(const WeatherData weather) {
     weatherData = weather;
 }
 
-void weathersvr::LocationData::setReadLastTime(const std::chrono::system_clock::time_point time) {
+void weatherserver::LocationData::setReadLastTime(const std::chrono::system_clock::time_point time) {
     readLastTime = time;
 }
 
-bool weathersvr::LocationData::operator<(const LocationData& rhs) const {
+bool weatherserver::LocationData::operator<(const LocationData& rhs) const {
     return ((this->name < rhs.name) && (this->countryCode < rhs.countryCode));
 }
 
-bool weathersvr::LocationData::operator==(const LocationData& rhs) const {
+bool weatherserver::LocationData::operator==(const LocationData& rhs) const {
     return (this->name == rhs.name && this->countryCode == rhs.countryCode);
 }
 
-bool weathersvr::LocationData::operator!=(const LocationData & rhs) const {
+bool weatherserver::LocationData::operator!=(const LocationData & rhs) const {
     return !(*this == rhs);
 }

@@ -6,7 +6,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace weathersvr {
+namespace weatherserver {
     /* A LocationData Class represents a JSON object returned from the Open AQ Platform API.
     * Examples of json objects represeting cities from the API:
     {"location":"ALGOMA","city":"ONTARIO","country":"CA","count":9290,"sourceNames"["AirNow"],
