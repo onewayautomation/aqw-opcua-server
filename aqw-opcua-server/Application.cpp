@@ -11,12 +11,12 @@
 #include "Settings.h"
 #include "WebService.h"
 
-namespace weatherserver {
+
 
     // TODO: Global Variables, Be aware of them.
     // Service responsible for REST calls on the internet.
-    WebService ws;
-    WebService* webService = &ws;
+    weatherserver::WebService ws;
+    weatherserver::WebService* webService = &ws;
 
     UA_Boolean running = true;
 
@@ -25,6 +25,7 @@ namespace weatherserver {
         running = false;
     }
 
+namespace weatherserver {
     /*
     Update all the weather variables nodes of the location supplied by parameter from the web service.
     Map these objects returned from the web service in OPC UA objects and put them available in the address space.
@@ -651,89 +652,90 @@ namespace weatherserver {
 
         return defaultGetNode(nodestoreContext, nodeId);
     }
+}
 
-    int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 
-        //extracting current directory
-        std::string fullPath(argv[0]);
-        std::string currentDir = fullPath.substr(0, fullPath.find_last_of("/\\"));
+    //extracting current directory
+    std::string fullPath(argv[0]);
+    std::string currentDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1);
+    std::cout << "Current directory: " << currentDir << std::endl;
 
-        /*
-          Assign default values to variables.
-          Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
-          If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
+    /*
+      Assign default values to variables.
+      Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
+      If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
+    */
+    weatherserver::Settings settings(currentDir);
+    if (!settings.isValid())
+        return EXIT_FAILURE;
+
+    webService->setSettings(settings);
+
+    signal(SIGINT, stopHandler);
+    signal(SIGTERM, stopHandler);
+
+    //UA_Server *server = UA_Server_new();
+    //UA_ServerConfig *config = UA_Server_getConfig(server);
+
+    //UA_Nodestore* ns = (UA_Nodestore*) UA_Server_getNodestore(server);
+
+    //defaultGetNode = ns->getNode;
+
+    //ns->getNode = customGetNode;
+
+    //UA_ServerConfig_setDefault(config);
+    /* 1.0rc5 version
+
+    UA_Server* server = UA_Server_new();
+    UA_ServerConfig_setDefault(UA_Server_getConfig(server));
+
+    */
+
+    // 0.3 version
+
+    UA_ServerConfig* config = UA_ServerConfig_new_default();
+    weatherserver::defaultGetNode = config->nodestore.getNode;
+    config->nodestore.getNode = weatherserver::customGetNode;
+
+    UA_Server* server = UA_Server_new(config);
+
+
+    webService->setServer(server);
+
+    /* Should the server networklayer block (with a timeout) until a message
+    arrives or should it return immediately? */
+    UA_Boolean waitInternal = false;
+
+    UA_StatusCode retval = UA_Server_run_startup(server);
+    if (retval != UA_STATUSCODE_GOOD)
+        return 1;
+
+    while (running) {
+        /* timeout is the maximum possible delay (in millisec) until the next
+        _iterate call. Otherwise, the server might miss an internal timeout
+        or cannot react to messages with the promised responsiveness. */
+        /* If multicast discovery server is enabled, the timeout does not not consider new input data (requests) on the mDNS socket.
+        * It will be handled on the next call, which may be too late for requesting clients.
+        * if needed, the select with timeout on the multicast socket server->mdnsSocket (see example in mdnsd library)
         */
-        Settings settings(currentDir);
-        if (!settings.isValid())
-            return EXIT_FAILURE;
+        UA_UInt16 timeout = UA_Server_run_iterate(server, waitInternal);
 
-        webService->setSettings(settings);
+        // HERE you can add any node to the server you like.
+        // Make sure that you only call any created method once in this loop.
+        weatherserver::addCountries(server);
 
-        signal(SIGINT, stopHandler);
-        signal(SIGTERM, stopHandler);
-
-        //UA_Server *server = UA_Server_new();
-        //UA_ServerConfig *config = UA_Server_getConfig(server);
-
-        //UA_Nodestore* ns = (UA_Nodestore*) UA_Server_getNodestore(server);
-
-        //defaultGetNode = ns->getNode;
-
-        //ns->getNode = customGetNode;
-
-        //UA_ServerConfig_setDefault(config);
-        /* 1.0rc5 version
-
-        UA_Server* server = UA_Server_new();
-        UA_ServerConfig_setDefault(UA_Server_getConfig(server));
-
-        */
-
-        // 0.3 version
-
-        UA_ServerConfig* config = UA_ServerConfig_new_default();
-        defaultGetNode = config->nodestore.getNode;
-        config->nodestore.getNode = customGetNode;
-
-        UA_Server* server = UA_Server_new(config);
-
-
-        webService->setServer(server);
-
-        /* Should the server networklayer block (with a timeout) until a message
-        arrives or should it return immediately? */
-        UA_Boolean waitInternal = false;
-
-        UA_StatusCode retval = UA_Server_run_startup(server);
-        if (retval != UA_STATUSCODE_GOOD)
-            return 1;
-
-        while (running) {
-            /* timeout is the maximum possible delay (in millisec) until the next
-            _iterate call. Otherwise, the server might miss an internal timeout
-            or cannot react to messages with the promised responsiveness. */
-            /* If multicast discovery server is enabled, the timeout does not not consider new input data (requests) on the mDNS socket.
-            * It will be handled on the next call, which may be too late for requesting clients.
-            * if needed, the select with timeout on the multicast socket server->mdnsSocket (see example in mdnsd library)
-            */
-            UA_UInt16 timeout = UA_Server_run_iterate(server, waitInternal);
-
-            // HERE you can add any node to the server you like.
-            // Make sure that you only call any created method once in this loop.
-            addCountries(server);
-
-            /* Now we can use the max timeout to do something else. In this case, we just sleep. */
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        retval = UA_Server_run_shutdown(server);
-        UA_Server_delete(server);
-
-        //UA_ServerConfig_clean(config);
-
-        //0.3 version. no config delete in 1.0rc5
-
-        UA_ServerConfig_delete(config);
-
-        return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
+        /* Now we can use the max timeout to do something else. In this case, we just sleep. */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    retval = UA_Server_run_shutdown(server);
+    UA_Server_delete(server);
+
+    //UA_ServerConfig_clean(config);
+
+    //0.3 version. no config delete in 1.0rc5
+
+    UA_ServerConfig_delete(config);
+
+    return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -11,6 +11,8 @@ namespace weatherserver {
 
         public:
 
+            Settings();
+
             /*
               Assign default values to variables.
               Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
@@ -21,7 +23,7 @@ namespace weatherserver {
 
             const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
             const utility::string_t& getUnits() const { return units; }
-            const int getIntervalWeatherDataDownload() const { return intervalWeatherDataDownload; }
+            int getIntervalWeatherDataDownload() const { return intervalWeatherDataDownload; }
 
             static const utility::string_t OPC_UA_SERVER;
             static const utility::string_t API_OPENAQ;
