@@ -7,10 +7,16 @@ const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_API_KEY 
 const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
 const utility::string_t weatherserver::Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
 
-const std::string weatherserver::Settings::SETTINGS_FILE_NAME = "settings.json";
+const std::string SETTINGS_FILE_NAME = "settings.json";
 
 weatherserver::Settings::Settings() {
-    setDefaultValues();
+    //assign default values
+    keyApiDarksky = U("");
+    units = U("si");
+    intervalWeatherDataDownload = 10;
+    port_number = 48484;
+    endpointUrl = "opc.tcp://localhost:48484";
+    hostName = "localhost";
 }
 
 bool weatherserver::Settings::setup() {
@@ -27,10 +33,14 @@ bool weatherserver::Settings::setup() {
             return false;
         }
 
-        std::cout << "Building settings..." << std::endl;
+        std::cout << "File opened successfully. Building settings..." << std::endl;
 
         auto jsonFile = web::json::value::parse(inputFile);
-        validateValuesFromDarkSky(jsonFile.at(API_DARKSKY));
+        if (!validateValuesFromDarkSky(jsonFile.at(API_DARKSKY))) {
+            std::cerr << "Invalid Dark Sky API key. Terminating..." << std::endl;
+            std::cout << "################################################" << std::endl << std::endl;
+            return false;
+        }
 
         this->port_number = jsonFile.at(U("opc_ua_server")).at(U("port-number")).as_integer();
         this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
@@ -44,45 +54,30 @@ bool weatherserver::Settings::setup() {
     }
 
     std::cout << "Weather data units: " << utility::conversions::to_utf8string(units) << std::endl;
-    std::cout << "Interval in minutes for automatic update of weather data: " << intervalDownloadWeatherData << std::endl;
+    std::cout << "Interval in minutes for automatic update of weather data: " << intervalWeatherDataDownload << std::endl;
 
     std::cout << "################################################" << std::endl << std::endl;
 
   return true;
 }
 
-void weatherserver::Settings::setDefaultValues() {
-    keyApiDarksky = U("");
-    units = U("si");
-    intervalDownloadWeatherData = 10;
-    port_number = 48484;
-    endpointUrl = "opc.tcp://localhost:48484";
-    hostName = "localhost";
-    keyApiDarkskyStatus = false;
-}
-
-void weatherserver::Settings::validateValuesFromDarkSky(web::json::value & jsonObj) {
-    // Set the values from the Json file's DarkSky object.
+bool weatherserver::Settings::validateValuesFromDarkSky(web::json::value& jsonObj) {
+    //Set the values from the Json file's DarkSky object.
     keyApiDarksky = jsonObj.at(PARAM_NAME_API_DARKSKY_API_KEY).as_string();
 
-    //if no error parsing assume key is ok, but run extra checks below
-    keyApiDarkskyStatus = true;
-
-    //If empty or has spaces - invalid key for sure. Need to track and inform that no weather data will be available
+    //Simple checks: empty or with spaces - invalid key for sure.
     if (keyApiDarksky.empty()) {
-        keyApiDarkskyStatus = false;
-        std::cout << "Empty Dark Sky API key. No weather data will be available" << std::endl;
+        std::cout << "Empty Dark Sky API key. No weather data will be available." << std::endl;
+        return false;
     }
     else {
         for (int i = 0; i < keyApiDarksky.length(); i++) {
             if (iswspace(keyApiDarksky[i])) {
-                keyApiDarkskyStatus = false;
-                std::cout << "Dark Sky API key has spaces - invalid entry. No weather data will be available" << std::endl;
-                break; //one space is enough to call the key invalid
+                std::cout << "Dark Sky API key has spaces - invalid entry. No weather data will be available." << std::endl;
+                return false;
             }
         }
     }
-
 
     /* `units` - Return weather conditions in the requested units, should be one of the following:
     auto: automatically select units based on geographic location
@@ -96,7 +91,9 @@ void weatherserver::Settings::validateValuesFromDarkSky(web::json::value & jsonO
         units = tempUnits;
 
     /* The interval for downloading allowed is from 1 to 60 minutes. */
-    short tempInterval = static_cast<short>(jsonObj.at(PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA).as_integer());
+    int tempInterval = static_cast<short>(jsonObj.at(PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA).as_integer());
     if (tempInterval >= 1 && tempInterval <= 60)
-        intervalDownloadWeatherData = tempInterval;
+        intervalWeatherDataDownload = tempInterval;
+
+    return true;
 }

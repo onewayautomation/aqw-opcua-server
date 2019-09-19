@@ -640,13 +640,12 @@ const UA_Node * customGetNode(void *nodestoreContext, const UA_NodeId *nodeId) {
 }
 
 int main(int argc, char* argv[]) {
-
-    // Build the application settings variables.
+    /*
+      Setup default values and attempt to read extras from settings file.
+      Considering DarkSky API key is essential to server functionality, we simply terminate the program if no valid key was found.
+    */
     weatherserver::Settings settings;
-
-    if (!settings.setup()) {
-        return -1;
-    }
+    if (!settings.setup()) { return -1; }
 
     webService->setSettings(settings);
 
