@@ -11,15 +11,13 @@ namespace weatherserver {
 
         public:
 
-            Settings();
-
             /*
               Assign default values to variables.
               Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
             */
-            Settings(std::string& currentDir);
+            Settings(const std::string& currentDir);
 
-            const bool Settings::isValid() const { return settingsAreValid; }
+            bool areValid() const { return settingsAreValid; }
 
             const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
             const utility::string_t& getUnits() const { return units; }
@@ -35,7 +33,7 @@ namespace weatherserver {
         private:
 
             //If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - set the flag to terminate the program.
-            void processSettingsFile(std::string& currentDir);
+            void processSettingsFile(const std::string& currentDir);
 
             /*
             Check if the values present in the settings.json file related to the dark sky api are valid before set them to respective variables. If is not valid, the default values will be kept.
@@ -51,7 +49,6 @@ namespace weatherserver {
             std::string endpointUrl;
             std::string hostName;
 
-            //using this flag to check if we need to terminate the program
-            bool settingsAreValid;
+            bool settingsAreValid = false;
     };
 }

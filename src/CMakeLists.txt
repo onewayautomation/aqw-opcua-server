@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 set(headers
     "CountryData.h"
@@ -23,8 +23,6 @@ source_group("Headers" FILES ${headers})
 source_group("Sources" FILES ${sources})
 
 add_executable(aqw-opcua-server ${headers} ${sources})
-
-find_package(cpprestsdk CONFIG REQUIRED)
 
 target_link_libraries(aqw-opcua-server PRIVATE cpprestsdk::cpprest)
 

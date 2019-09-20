@@ -15,8 +15,7 @@
 
     // TODO: Global Variables, Be aware of them.
     // Service responsible for REST calls on the internet.
-    weatherserver::WebService ws;
-    weatherserver::WebService* webService = &ws;
+    weatherserver::WebService* webService;
 
     UA_Boolean running = true;
 
@@ -667,10 +666,13 @@ int main(int argc, char* argv[]) {
       If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
     */
     weatherserver::Settings settings(currentDir);
-    if (!settings.isValid())
+    if (!settings.areValid())
         return EXIT_FAILURE;
 
-    webService->setSettings(settings);
+    weatherserver::WebService ws(&settings);
+    webService = &ws;
+
+    //webService->setSettings(settings);
 
     signal(SIGINT, stopHandler);
     signal(SIGTERM, stopHandler);

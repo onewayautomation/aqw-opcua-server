@@ -11,7 +11,8 @@ namespace weatherserver {
 
     const std::string SETTINGS_FILE_NAME = "settings.json";
 
-    Settings::Settings() {
+    Settings::Settings(const std::string& currentDir) {
+        //default values
         keyApiDarksky = U("");
         units = U("si");
         intervalWeatherDataDownload = 10;
@@ -19,20 +20,16 @@ namespace weatherserver {
         endpointUrl = "opc.tcp://localhost:48484";
         hostName = "localhost";
 
-        settingsAreValid = false;
-    }
-
-    Settings::Settings(std::string& currentDir) {
-        Settings::Settings();
-
         settingsAreValid = true; //if stays true after processing - we are good, otherwise - terminate
 
-        processSettingsFile(currentDir);
+        std::string settingsFileName = currentDir + SETTINGS_FILE_NAME;
+
+        processSettingsFile(settingsFileName);
     }
 
-    void Settings::processSettingsFile(std::string& currentDir) {
+    void Settings::processSettingsFile(const std::string& settingsFileName) {
         try {
-            std::fstream inputFile{ currentDir.append(SETTINGS_FILE_NAME) };
+            std::fstream inputFile{ settingsFileName };
 
             std::cout << "################################################" << std::endl;
 
