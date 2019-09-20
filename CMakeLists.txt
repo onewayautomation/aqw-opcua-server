@@ -2,9 +2,20 @@ cmake_minimum_required(VERSION 3.10)
 
 project(aqw-opcua-server)
 
-find_package(cpprestsdk CONFIG REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/bin/MinSizeRel")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo")
 
-file(COPY "settings_example.json" DESTINATION ".")
-file(RENAME ${CMAKE_BINARY_DIR}/settings_example.json ${CMAKE_BINARY_DIR}/settings.json)
+add_subdirectory("src")
 
-add_subdirectory("aqw-opcua-server")
+file(GENERATE OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}/settings.json" INPUT "${CMAKE_SOURCE_DIR}/settings_example.json")
+file(GENERATE OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}/settings.json" INPUT "${CMAKE_SOURCE_DIR}/settings_example.json")
+file(GENERATE OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL}/settings.json" INPUT "${CMAKE_SOURCE_DIR}/settings_example.json")
+file(GENERATE OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO}/settings.json" INPUT "${CMAKE_SOURCE_DIR}/settings_example.json")
+
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/<$<$<CONFIG:Debug>:${OUTPUT_DEBUG}><$<CONFIG:Release>:${OUTPUT_REL}>>")
+
+#file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/bin/<$<$<CONFIG:Debug>:${OUTPUT_DEBUG}><$<CONFIG:Release>:${OUTPUT_REL}>>/settings.json" INPUT "${CMAKE_SOURCE_DIR}/settings_example.json")
+
+#set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VC_STARTUP_PROJECT aqw-opcua-server)

@@ -658,7 +658,7 @@ int main(int argc, char* argv[]) {
 
     //extracting current directory
     std::string fullPath(argv[0]);
-    std::string currentDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1);
+    std::string currentDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1); //including separator since we are adding file name later
     std::cout << "Current directory: " << currentDir << std::endl;
 
     /*
