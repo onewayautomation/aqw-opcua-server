@@ -13,16 +13,16 @@
 
 
 
-    // TODO: Global Variables, Be aware of them.
-    // Service responsible for REST calls on the internet.
-    weatherserver::WebService* webService;
+// TODO: Global Variables, Be aware of them.
+// Service responsible for REST calls on the internet.
+weatherserver::WebService* webService;
 
-    UA_Boolean running = true;
+UA_Boolean running = true;
 
-    static void stopHandler(int sig) {
-        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "received ctrl-c");
-        running = false;
-    }
+static void stopHandler(int sig) {
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "received ctrl-c");
+    running = false;
+}
 
 namespace weatherserver {
     /*
@@ -657,22 +657,22 @@ int main(int argc, char* argv[]) {
 
     //extracting current directory
     std::string fullPath(argv[0]);
-    std::string currentDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1); //including separator since we are adding file name later
-    std::cout << "Current directory: " << currentDir << std::endl;
+    std::string execDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1); //including separator since we are adding file name later
+    std::cout << "Executable directory: " << execDir << std::endl;
 
     /*
       Assign default values to variables.
-      Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
+      Attempt to open "settings.json" file to get Dark Sky API key and other settings to override dafault values.
       If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
     */
-    weatherserver::Settings settings(currentDir);
-    if (!settings.areValid())
+    weatherserver::Settings settings(execDir);
+    if (!settings.areValid()) {
+        std::cout << "Invalid settings values. Terminating..." << std::endl;
         return EXIT_FAILURE;
+    }
 
-    weatherserver::WebService ws(&settings);
+    weatherserver::WebService ws(settings);
     webService = &ws;
-
-    //webService->setSettings(settings);
 
     signal(SIGINT, stopHandler);
     signal(SIGTERM, stopHandler);
@@ -710,8 +710,10 @@ int main(int argc, char* argv[]) {
     UA_Boolean waitInternal = false;
 
     UA_StatusCode retval = UA_Server_run_startup(server);
-    if (retval != UA_STATUSCODE_GOOD)
-        return 1;
+    if (retval != UA_STATUSCODE_GOOD) {
+        std::cout << "Couldn't start the UA server. Terminating..." << std::endl;
+        return EXIT_FAILURE;
+    }
 
     while (running) {
         /* timeout is the maximum possible delay (in millisec) until the next

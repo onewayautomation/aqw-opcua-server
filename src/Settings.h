@@ -13,9 +13,10 @@ namespace weatherserver {
 
             /*
               Assign default values to variables.
-              Attempt to open SETTINGS_FILE_NAME to get Dark Sky API key and other settings to override dafault values.
+              Attempt to open "settings.json" file to get Dark Sky API key and other settings to override dafault values.
+              execDir variable should contain to executable PLUS the separator '\' or '/'
             */
-            Settings(const std::string& currentDir);
+            Settings(const std::string& execDir);
 
             bool areValid() const { return settingsAreValid; }
 

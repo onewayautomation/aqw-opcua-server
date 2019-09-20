@@ -11,7 +11,7 @@ namespace weatherserver {
 
     const std::string SETTINGS_FILE_NAME = "settings.json";
 
-    Settings::Settings(const std::string& currentDir) {
+    Settings::Settings(const std::string& execDir) {
         //default values
         keyApiDarksky = U("");
         units = U("si");
@@ -20,16 +20,14 @@ namespace weatherserver {
         endpointUrl = "opc.tcp://localhost:48484";
         hostName = "localhost";
 
-        settingsAreValid = true; //if stays true after processing - we are good, otherwise - terminate
-
-        std::string settingsFileName = currentDir + SETTINGS_FILE_NAME;
+        std::string settingsFileName = execDir + SETTINGS_FILE_NAME;
 
         processSettingsFile(settingsFileName);
     }
 
     void Settings::processSettingsFile(const std::string& settingsFileName) {
         try {
-            std::fstream inputFile{ settingsFileName };
+            std::ifstream inputFile{ settingsFileName };
 
             std::cout << "################################################" << std::endl;
 
@@ -38,7 +36,6 @@ namespace weatherserver {
                 std::cerr << "Could not open the settings file: " << SETTINGS_FILE_NAME << std::endl;
                 std::cerr << "Check if the file was copied correctly at build stage." << std::endl;
                 std::cout << "################################################" << std::endl << std::endl;
-                settingsAreValid = false;
                 return;
             }
 
@@ -48,7 +45,6 @@ namespace weatherserver {
             if (!validateValuesFromDarkSky(jsonFile.at(API_DARKSKY))) {
                 std::cerr << "Invalid Dark Sky API key." << std::endl;
                 std::cout << "################################################" << std::endl << std::endl;
-                settingsAreValid = false;
                 return;
             }
 
@@ -60,7 +56,6 @@ namespace weatherserver {
         }
         catch (const web::json::json_exception& e) {
             std::cerr << "Error parsing the settings json file: " << e.what() << std::endl;
-            settingsAreValid = false;
             return;
         }
 
@@ -68,6 +63,8 @@ namespace weatherserver {
         std::cout << "Interval in minutes for automatic update of weather data: " << intervalWeatherDataDownload << std::endl;
 
         std::cout << "################################################" << std::endl << std::endl;
+
+        settingsAreValid = true; //passed all checks - seems to be ok
 
         return;
     }

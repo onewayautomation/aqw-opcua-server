@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.15)
+#using 3.10 because of Ubuntu installation
+cmake_minimum_required(VERSION 3.10)
 
 project(aqw-opcua-server)
 

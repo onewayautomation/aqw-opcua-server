@@ -15,7 +15,7 @@ namespace weatherserver {
 
         public:
 
-            WebService(Settings* settingsObj);
+            WebService(const Settings& settingsObj);
 
             // ########## Methods to fetch data from the APIs services.
             /*
@@ -44,11 +44,10 @@ namespace weatherserver {
             pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
 
             void setServer(UA_Server* uaServer);
-            //void setSettings(const Settings& settingsObj);
             void setAllCountries(const std::vector<CountryData>& allCountries);
 
             UA_Server* getServer() { return server; }
-            const Settings& getSettings() { return *settings; }
+            const Settings& getSettings() { return settings; }
             std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
 
             // Constants endpoints, keys, paths, querys etc to all the API services.
@@ -78,7 +77,7 @@ namespace weatherserver {
         private:
 
             UA_Server* server { nullptr };
-            Settings* settings { nullptr };
+            Settings settings;
             std::vector<CountryData> fetchedAllCountries{};
     };
 }
