@@ -35,7 +35,11 @@ A demo OPC UA server application, **currently in development**, that fetches wea
 	- make sure [vcpkg is installed](https://github.com/microsoft/vcpkg#quick-start) (it includes a CMake by default);
 	- install cpprestsdk in vcpkg: `vcpkg install cpprestsdk` (**use `:x64-windows` triplet in windows**);
 	- create directory `build` in the root repository directory and switch to it: `mkdir build && cd build`
-	- run cmake configure with toolchain from vcpkg: `cmake -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..`;
+	- run cmake configure with toolchain from vcpkg:
+        - Windows, MSVC 15 2017 : `cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
+        - Windows, MSVC 16 2019 : `cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
+        - Windows, other: `cmake -DVCPKG_TARGET_TRIPLET="x64-windows" -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..`;
+        - Ubuntu: `cmake -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..`;
 	- build with cmake: `cmake --build . --config Release`;
 	- run the server from executable directory where `settings.json` file is located.
 
