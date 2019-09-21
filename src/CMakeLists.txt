@@ -1,3 +1,6 @@
+#using 3.10 because of Ubuntu installation
+cmake_minimum_required(VERSION 3.10)
+
 set(headers
     "CountryData.h"
     "LocationData.h"

@@ -1,25 +1,25 @@
 #include "CountryData.h"
 
-const utility::string_t weathersvr::CountryData::KEY_NAME = U("name");
-const utility::string_t weathersvr::CountryData::KEY_CODE = U("code");
-const utility::string_t weathersvr::CountryData::KEY_CITIES = U("cities");
-const utility::string_t weathersvr::CountryData::KEY_LOCATIONS = U("locations");
+const utility::string_t weatherserver::CountryData::KEY_NAME = U("name");
+const utility::string_t weatherserver::CountryData::KEY_CODE = U("code");
+const utility::string_t weatherserver::CountryData::KEY_CITIES = U("cities");
+const utility::string_t weatherserver::CountryData::KEY_LOCATIONS = U("locations");
 
-char weathersvr::CountryData::COUNTRIES_FOLDER_NODE_ID[] = "Countries";
-char weathersvr::CountryData::BROWSE_NAME[] = "CountryName";
-char weathersvr::CountryData::BROWSE_CODE[] = "CountryCode";
-char weathersvr::CountryData::BROWSE_CITIES_NUMBER[] = "CountryCitiesNumber";
-char weathersvr::CountryData::BROWSE_LOCATIONS_NUMBER[] = "CountryLocationsNumber";
+char weatherserver::CountryData::COUNTRIES_FOLDER_NODE_ID[] = "Countries";
+char weatherserver::CountryData::BROWSE_NAME[] = "CountryName";
+char weatherserver::CountryData::BROWSE_CODE[] = "CountryCode";
+char weatherserver::CountryData::BROWSE_CITIES_NUMBER[] = "CountryCitiesNumber";
+char weatherserver::CountryData::BROWSE_LOCATIONS_NUMBER[] = "CountryLocationsNumber";
 
-weathersvr::CountryData::CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized)
+weatherserver::CountryData::CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized)
     : name {name}, code {code}, citiesNumber {cities}, locationsNumber {locations}, isInitialized {isInitialized}
 {}
 
-weathersvr::CountryData::CountryData(std::string code)
+weatherserver::CountryData::CountryData(std::string code)
     : CountryData {"", code, 0, 0}
 {}
 
-weathersvr::CountryData weathersvr::CountryData::parseJson(web::json::value& json) {
+weatherserver::CountryData weatherserver::CountryData::parseJson(web::json::value& json) {
 
     std::string name;
     std::string code;
@@ -48,7 +48,7 @@ weathersvr::CountryData weathersvr::CountryData::parseJson(web::json::value& jso
     return CountryData(name, code, cities, locations);
 }
 
-std::vector<weathersvr::CountryData> weathersvr::CountryData::parseJsonArray(web::json::value& jsonArray) {
+std::vector<weatherserver::CountryData> weatherserver::CountryData::parseJsonArray(web::json::value& jsonArray) {
     std::vector<CountryData> vectorAllCountries;
     try
     {
@@ -76,23 +76,23 @@ std::vector<weathersvr::CountryData> weathersvr::CountryData::parseJsonArray(web
     return vectorAllCountries;
 }
 
-void weathersvr::CountryData::setIsInitialized(const bool initialized) {
+void weatherserver::CountryData::setIsInitialized(const bool initialized) {
     isInitialized = initialized;
 }
 
-void weathersvr::CountryData::setLocations(const std::vector<LocationData>& allLocations) {
+void weatherserver::CountryData::setLocations(const std::vector<LocationData>& allLocations) {
     locations = allLocations;
 }
 
-bool weathersvr::CountryData::operator<(const CountryData& rhs) const {
+bool weatherserver::CountryData::operator<(const CountryData& rhs) const {
     return this->code < rhs.code;
 }
 
-bool weathersvr::CountryData::operator==(const CountryData& rhs) const {
+bool weatherserver::CountryData::operator==(const CountryData& rhs) const {
     return this->code == rhs.code;
 }
 
-bool weathersvr::CountryData::operator!=(const CountryData& rhs) const {
+bool weatherserver::CountryData::operator!=(const CountryData& rhs) const {
     return !(*this == rhs);
 }
 

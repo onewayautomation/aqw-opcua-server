@@ -1,24 +1,28 @@
 #pragma once
-#include "cpprest/http_client.h"
+
 #include <fstream>
 #include <iostream>
 
-namespace weathersvr {
+#include <cpprest/http_client.h>
+
+namespace weatherserver {
 
     class Settings {
 
         public:
 
-            Settings();
             /*
-            Open the file passed to the formal parameter fileName and set the settings to variables of this class.
-            @param char* fileName - the path containing the settings file name and extension that is passed to command line arguments.
+              Assign default values to variables.
+              Attempt to open "settings.json" file to get Dark Sky API key and other settings to override dafault values.
+              execDir variable should contain to executable PLUS the separator '\' or '/'
             */
-            bool setup(char* fileName);
+            Settings(const std::string& execDir);
+
+            bool areValid() const { return settingsAreValid; }
 
             const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
             const utility::string_t& getUnits() const { return units; }
-            const short getIntervalDownloadWeatherData() const { return intervalDownloadWeatherData; }
+            int getIntervalWeatherDataDownload() const { return intervalWeatherDataDownload; }
 
             static const utility::string_t OPC_UA_SERVER;
             static const utility::string_t API_OPENAQ;
@@ -29,24 +33,23 @@ namespace weathersvr {
 
         private:
 
-            void setDefaultValues();
+            //If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - set the flag to terminate the program.
+            void processSettingsFile(const std::string& currentDir);
+
             /*
             Check if the values present in the settings.json file related to the dark sky api are valid before set them to respective variables. If is not valid, the default values will be kept.
             This function may throw an exception web::json::json_exception.
-            @param web::json::value& jsonObj - The Json OBJECT which the values will be parsed and validated.
+            @param web::json::value& jsonObj - The Json OBJECT which values will be parsed and validated.
             */
-            void validateValuesFromDarkSky(web::json::value& jsonObj);
+            bool validateValuesFromDarkSky(web::json::value& jsonObj);
 
             utility::string_t keyApiDarksky;
             utility::string_t units;
-            short intervalDownloadWeatherData;
-
-            //was public, changed to private
+            int intervalWeatherDataDownload;
             int port_number;
             std::string endpointUrl;
             std::string hostName;
 
-            //Flag to track if we get invalid DarkSky API key from settings file. Can stop sending weather requests etc
-            bool validkeyApiDarksky = true;
+            bool settingsAreValid = false;
     };
 }
