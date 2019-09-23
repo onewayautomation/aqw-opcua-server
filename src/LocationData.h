@@ -1,12 +1,16 @@
 #pragma once
-#include "cpprest/http_client.h"
-#include "WeatherData.h"
+
 #include <string>
 #include <vector>
 #include <chrono>
 #include <ctime>
 
+#include <cpprest/http_client.h>
+
+#include "WeatherData.h"
+
 namespace weatherserver {
+
     /* A LocationData Class represents a JSON object returned from the Open AQ Platform API.
     * Examples of json objects represeting cities from the API:
     {"location":"ALGOMA","city":"ONTARIO","country":"CA","count":9290,"sourceNames"["AirNow"],
@@ -19,7 +23,7 @@ namespace weatherserver {
     */
     class LocationData {
     public:
-        LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude, 
+        LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude,
             bool hasBeenReceivedWeatherData = false, bool isInitialized = false, bool isAddingWeatherToAddressSpace = false);
         /*
         This constructor version is used for initialize temporary LocationData objects to look for them inside a vector of LocationData objects.
@@ -39,11 +43,11 @@ namespace weatherserver {
         Gets a new JSON value AS AN ARRAY from the cpprestsdk returned from the API request and
         parse every JSON object inside the array to a new LocationData object, adding it to a vector.
         @param web::json::value& jsonArray - A JSON value as an array returned from the API request.
-        @return std::vector<LocationData> - A new vector of LocationData objects parsed from the 
+        @return std::vector<LocationData> - A new vector of LocationData objects parsed from the
         JSON array returned from the API.
         */
         static std::vector<LocationData> parseJsonArray(web::json::value& jsonArray);
-        
+
         void setHasBeenReceivedWeatherData(const bool received);
         void setIsInitialized(const bool initialized);
         void setIsAddingWeatherToAddressSpace(const bool addingWeatherToAddressSpace);
