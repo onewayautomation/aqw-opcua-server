@@ -39,6 +39,8 @@
 #endif
 
 #include "open62541.h"
+int custom_port_number = 48484;
+const char* custom_endpoint_url = "opc.tcp://localhost:48484";
 
 /*********************************** amalgamated original file "/home/travis/build/open62541/open62541/deps/queue.h" ***********************************/
 
@@ -32499,10 +32501,10 @@ periodicServerRegister(UA_Server *server, void *data) {
     /* Which URL to register on */
     // fixme: remove magic url
     const char * server_url;
-    if(cb->discovery_server_url != NULL)
-        server_url = cb->discovery_server_url;
-    else
-        server_url = "opc.tcp://localhost:4840";
+		if (cb->discovery_server_url != NULL)
+			server_url = cb->discovery_server_url;
+		else
+			server_url = custom_endpoint_url;
 
     /* Register
        You can also use a semaphore file. That file must exist. When the file is
@@ -35391,7 +35393,7 @@ static UA_StatusCode
 addMdnsRecordForNetworkLayer(UA_Server *server, const UA_String *appName,
                              const UA_ServerNetworkLayer* nl) {
     UA_String hostname = UA_STRING_NULL;
-    UA_UInt16 port = 4840;
+    UA_UInt16 port = custom_port_number;
     UA_String path = UA_STRING_NULL;
     UA_StatusCode retval = UA_parseEndpointUrl(&nl->discoveryUrl, &hostname,
                                                &port, &path);
@@ -35426,7 +35428,7 @@ void stopMulticastDiscoveryServer(UA_Server *server) {
     if(gethostname(hostname, 255) == 0) {
         UA_String hnString = UA_STRING(hostname);
         UA_Discovery_removeRecord(server, &server->config.mdnsServerName,
-                                  &hnString, 4840, UA_TRUE);
+                                  &hnString, custom_port_number, UA_TRUE);
     } else {
         UA_LOG_ERROR(server->config.logger, UA_LOGCATEGORY_SERVER,
                      "Could not get hostname for multicast discovery.");
@@ -35509,7 +35511,7 @@ UA_Discovery_update_MdnsForDiscoveryUrl(UA_Server *server, const UA_String *serv
                                         const UA_String *discoveryUrl,
                                         UA_Boolean isOnline, UA_Boolean updateTxt) {
     UA_String hostname = UA_STRING_NULL;
-    UA_UInt16 port = 4840;
+    UA_UInt16 port = custom_port_number;
     UA_String path = UA_STRING_NULL;
     UA_StatusCode retval = UA_parseEndpointUrl(discoveryUrl, &hostname, &port, &path);
     if(retval != UA_STATUSCODE_GOOD) {
@@ -39807,7 +39809,7 @@ UA_ClientConnectionTCP(UA_ConnectionConfig conf,
     hostname[hostnameString.length] = 0;
 
     if(port == 0) {
-        port = 4840;
+        port = custom_port_number;
         UA_LOG_INFO(logger, UA_LOGCATEGORY_NETWORK,
                     "No port defined, using default port %d", port);
     }
