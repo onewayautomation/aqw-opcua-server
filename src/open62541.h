@@ -71,6 +71,9 @@ extern "C" {
 #include <string.h>
 #include <stddef.h>
 
+extern int custom_port_number;
+extern const char* custom_endpoint_url;
+
 /* Include stdint.h and stdbool.h or workaround for older Visual Studios */
 #if !defined(_MSC_VER) || _MSC_VER >= 1600
 # include <stdint.h>
@@ -15578,7 +15581,7 @@ UA_ServerConfig_new_allSecurityPolicies(UA_UInt16 portNumber,
  * certificate. */
 static UA_INLINE UA_ServerConfig *
 UA_ServerConfig_new_default(void) {
-    return UA_ServerConfig_new_minimal(4840, NULL);
+    return UA_ServerConfig_new_minimal(custom_port_number, NULL);
 }
 
 /* Set a custom hostname in server configuration

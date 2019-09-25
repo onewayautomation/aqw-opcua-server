@@ -672,6 +672,11 @@ int main(int argc, char* argv[]) {
     }
 
     weatherserver::WebService ws(settings);
+
+		custom_port_number = settings.port_number;
+		if (!settings.endpointUrl.empty())
+			custom_endpoint_url = settings.endpointUrl.c_str();
+
     webService = &ws;
 
     signal(SIGINT, stopHandler);
@@ -697,6 +702,12 @@ int main(int argc, char* argv[]) {
     // 0.3 version
 
     UA_ServerConfig* config = UA_ServerConfig_new_default();
+		if (!settings.hostName.empty())
+		{
+			config->customHostname.length = settings.hostName.length();
+			config->customHostname.data = (UA_Byte*) settings.hostName.c_str();
+		}
+
     weatherserver::defaultGetNode = config->nodestore.getNode;
     config->nodestore.getNode = weatherserver::customGetNode;
 

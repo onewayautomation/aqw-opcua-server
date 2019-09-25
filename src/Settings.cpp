@@ -79,7 +79,7 @@ namespace weatherserver {
             return false;
         }
         else {
-            for (int i = 0; i < keyApiDarksky.length(); i++) {
+            for (size_t i = 0; i < keyApiDarksky.length(); i++) {
                 if (iswspace(keyApiDarksky[i])) {
                     std::cout << "Dark Sky API key has spaces - invalid entry. No weather data will be available." << std::endl;
                     return false;

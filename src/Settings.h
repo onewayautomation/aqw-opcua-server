@@ -31,6 +31,9 @@ namespace weatherserver {
             static const utility::string_t PARAM_NAME_API_DARKSKY_UNITS;
             static const utility::string_t PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA;
 
+            int port_number;
+            std::string endpointUrl;
+            std::string hostName;
         private:
 
             //If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - set the flag to terminate the program.
@@ -46,10 +49,6 @@ namespace weatherserver {
             utility::string_t keyApiDarksky;
             utility::string_t units;
             int intervalWeatherDataDownload;
-            int port_number;
-            std::string endpointUrl;
-            std::string hostName;
-
             bool settingsAreValid = false;
     };
 }
