@@ -32,16 +32,26 @@ A demo OPC UA server application, **currently in development**, that fetches wea
 5) You can build this application with [CMake](https://cmake.org) (verified on Windows 10 and Ubuntu 18.04):
 
 	- (**optional**) make sure [CMake v3.10+ is installed](https://cmake.org/download/) or `sudo apt install cmake`;
-	- make sure [vcpkg is installed](https://github.com/microsoft/vcpkg#quick-start) (it includes a CMake by default);
+	- make sure [vcpkg is installed](https://github.com/microsoft/vcpkg#quick-start) (it includes CMake by default);
 	- install cpprestsdk in vcpkg: `vcpkg install cpprestsdk` (**use `:x64-windows` triplet in windows**);
 	- create directory `build` in the root repository directory and switch to it: `mkdir build && cd build`
 	- run cmake configure with toolchain from vcpkg:
-        - Windows, MSVC 15 2017 : `cmake -G "Visual Studio 15 2017" Win64 -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
-        - Windows, MSVC 16 2019 : `cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
+        - Windows, MSVS 15 2017 : `cmake -G "Visual Studio 15 2017" Win64 -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
+        - Windows, MSVS 16 2019 : `cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" ..`;
         - Windows, other: `cmake -DVCPKG_TARGET_TRIPLET="x64-windows" -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..`;
         - Ubuntu: `cmake -DCMAKE_TOOLCHAIN_FILE="**your/path/to**/vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..`;
 	- build with cmake: `cmake --build . --config Release`;
-	- run the server from executable directory where `settings.json` file is located.
+
+6) Starting the server:
+
+    - you can start `aqw-opcua-server.exe` from anywhere, by default it will try to pickup settings from `settings.json` file located next to executable;
+    - if default settings location is not acceptable, you can create your copy either from `settings.json` or `settings_example.json` and pass it as a parameter `relative to current directory`.
+
+    Examples:
+
+    - `path/to/aqw-opcua-server.exe` - default scenario with default settings;
+    - `path/to/aqw-opcua-server.exe my_custom_settings.json` - use your settings from current folder;
+    - `path/to/aqw-opcua-server.exe relative/path/to/settings/collection/my_settings_variant42.json`.
 
 ## Project Overview.
 

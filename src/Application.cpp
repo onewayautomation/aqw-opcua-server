@@ -655,17 +655,27 @@ namespace weatherserver {
 
 int main(int argc, char* argv[]) {
 
-    //extracting current directory
-    std::string fullPath(argv[0]);
-    std::string execDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1); //including separator since we are adding file name later
-    std::cout << "Executable directory: " << execDir << std::endl;
+    std::string settingsPath = "";
+
+    if (argc > 1) {
+        settingsPath = argv[1];
+        std::cout << "Accepted custom settings file path as a parameter: " << settingsPath << std::endl;
+    }
+    else {
+        //default settings file location - executable directory
+        std::string fullPath(argv[0]);
+        std::string execDir = fullPath.substr(0, fullPath.find_last_of("/\\") + 1); //including separator since we are adding a file name
+        std::cout << "Executable directory: " << execDir << std::endl;
+        settingsPath = execDir + "settings.json";
+        std::cout << "Using default settings file: " << settingsPath << std::endl;
+    }
 
     /*
       Assign default values to variables.
       Attempt to open "settings.json" file to get Dark Sky API key and other settings to override dafault values.
       If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
     */
-    weatherserver::Settings settings(execDir);
+    weatherserver::Settings settings(settingsPath);
     if (!settings.areValid()) {
         std::cout << "Invalid settings values. Terminating..." << std::endl;
         return EXIT_FAILURE;
@@ -673,9 +683,9 @@ int main(int argc, char* argv[]) {
 
     weatherserver::WebService ws(settings);
 
-		custom_port_number = settings.port_number;
-		if (!settings.endpointUrl.empty())
-			custom_endpoint_url = settings.endpointUrl.c_str();
+    custom_port_number = settings.port_number;
+    if (!settings.endpointUrl.empty())
+        custom_endpoint_url = settings.endpointUrl.c_str();
 
     webService = &ws;
 
@@ -702,11 +712,11 @@ int main(int argc, char* argv[]) {
     // 0.3 version
 
     UA_ServerConfig* config = UA_ServerConfig_new_default();
-		if (!settings.hostName.empty())
-		{
-			config->customHostname.length = settings.hostName.length();
-			config->customHostname.data = (UA_Byte*) settings.hostName.c_str();
-		}
+
+    if (!settings.hostName.empty()) {
+        config->customHostname.length = settings.hostName.length();
+        config->customHostname.data = (UA_Byte*)settings.hostName.c_str();
+    }
 
     weatherserver::defaultGetNode = config->nodestore.getNode;
     config->nodestore.getNode = weatherserver::customGetNode;
