@@ -714,8 +714,9 @@ int main(int argc, char* argv[]) {
     UA_ServerConfig* config = UA_ServerConfig_new_default();
 
     if (!settings.hostName.empty()) {
-        config->customHostname.length = settings.hostName.length();
-        config->customHostname.data = (UA_Byte*)settings.hostName.c_str();
+        UA_String ourHostName = UA_String_fromChars(settings.hostName.c_str());
+        UA_ServerConfig_set_customHostname(config, ourHostName);
+        UA_String_delete(&ourHostName);
     }
 
     weatherserver::defaultGetNode = config->nodestore.getNode;
