@@ -9,9 +9,7 @@ namespace weatherserver {
     const utility::string_t Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
     const utility::string_t Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
 
-    const std::string SETTINGS_FILE_NAME = "settings.json";
-
-    Settings::Settings(const std::string& execDir) {
+    Settings::Settings(const std::string& settingsFilePath) {
         //default values
         keyApiDarksky = U("");
         units = U("si");
@@ -20,22 +18,20 @@ namespace weatherserver {
         endpointUrl = "opc.tcp://localhost:48484";
         hostName = "localhost";
 
-        std::string settingsFileName = execDir + SETTINGS_FILE_NAME;
-
-        processSettingsFile(settingsFileName);
+        processSettingsFile(settingsFilePath);
     }
 
-    void Settings::processSettingsFile(const std::string& settingsFileName) {
+    void Settings::processSettingsFile(const std::string& settingsFilePath) {
         try {
-            std::ifstream inputFile{ settingsFileName };
+            std::ifstream inputFile { settingsFilePath };
 
-            std::cout << "################################################" << std::endl;
+            std::cout << "###############################################################" << std::endl;
 
             if (!inputFile)
             {
-                std::cerr << "Could not open the settings file: " << SETTINGS_FILE_NAME << std::endl;
-                std::cerr << "Check if the file was copied correctly at build stage." << std::endl;
-                std::cout << "################################################" << std::endl << std::endl;
+                std::cerr << "Could not open the settings file: " << settingsFilePath << std::endl;
+                std::cerr << "Please check the file location (relative to current directory)." << std::endl;
+                std::cout << "###############################################################" << std::endl << std::endl;
                 return;
             }
 
@@ -44,7 +40,7 @@ namespace weatherserver {
             auto jsonFile = web::json::value::parse(inputFile);
             if (!validateValuesFromDarkSky(jsonFile.at(API_DARKSKY))) {
                 std::cerr << "Invalid Dark Sky API key." << std::endl;
-                std::cout << "################################################" << std::endl << std::endl;
+                std::cout << "###############################################################" << std::endl << std::endl;
                 return;
             }
 
@@ -62,7 +58,7 @@ namespace weatherserver {
         std::cout << "Weather data units: " << utility::conversions::to_utf8string(units) << std::endl;
         std::cout << "Interval in minutes for automatic update of weather data: " << intervalWeatherDataDownload << std::endl;
 
-        std::cout << "################################################" << std::endl << std::endl;
+        std::cout << "###############################################################" << std::endl << std::endl;
 
         settingsAreValid = true; //passed all checks - seems to be ok
 
