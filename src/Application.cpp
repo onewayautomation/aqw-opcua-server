@@ -716,7 +716,7 @@ int main(int argc, char* argv[]) {
     if (!settings.hostName.empty()) {
         UA_String ourHostName = UA_String_fromChars(settings.hostName.c_str());
         UA_ServerConfig_set_customHostname(config, ourHostName);
-        UA_String_delete(&ourHostName);
+        UA_String_deleteMembers(&ourHostName);
     }
 
     weatherserver::defaultGetNode = config->nodestore.getNode;
