@@ -1,9 +1,12 @@
 #pragma once
-#include "cpprest/http_client.h"
+
 #include <string>
 #include <vector>
 
+#include <cpprest/http_client.h>
+
 namespace weatherserver {
+
     /* A WeatherData Class represents a JSON object returned from the Open AQ Platform API.
     * Examples of json objects represeting weather from the API, excluding some blocks:
     {"latitude":47.035,"longitude":-84.3811,"timezone":"America/Toronto","currently":
@@ -18,7 +21,7 @@ namespace weatherserver {
     class WeatherData {
     public:
         WeatherData(double latitude, double longitude, std::string timezone, std::string icon,
-            double temperature, double apparentTemperature, double humidity, double pressure, 
+            double temperature, double apparentTemperature, double humidity, double pressure,
             double windSpeed, double windBearing, double cloudCover);
         WeatherData();
 
