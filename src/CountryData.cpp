@@ -29,9 +29,6 @@ namespace weatherserver {
         uint32_t cities = 0;
         uint32_t locations = 0;
 
-        //what's inside the json?
-        //std::wcout << json.serialize() << std::endl;
-
         try
         {
             name = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
@@ -41,7 +38,7 @@ namespace weatherserver {
         }
         catch (std::exception& ex)
         {
-            std::cout << "Exception caught while parsing JSON file: " << ex.what() << std::endl
+            std::cout << "Exception caught while parsing JSON file with countries data: " << ex.what() << std::endl
                 << "name (default - empty) = " << name << std::endl
                 << "code (default - empty) = " << code << std::endl
                 << "cities (default - 0) = " << cities << std::endl

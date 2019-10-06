@@ -35,14 +35,14 @@ namespace weatherserver {
 
         double getLatitude() const { return latitude; }
         double getLongitude() const { return longitude; }
-        std::string getTimezone() const { return timezone; }
-        std::string getCurrentlyIcon() const { return icon; }
+        const std::string& getTimezone() const { return timezone; }
+        const std::string& getCurrentlyIcon() const { return icon; }
         double getCurrentlyTemperature() const { return temperature; }
         double getCurrentlyApparentTemperature() const { return apparentTemperature; }
         double getCurrentlyHumidity() const { return humidity; }
         double getCurrentlyPressure() const { return pressure; }
         double getCurrentlyWindSpeed() const { return windSpeed; }
-    double getCurrentlyWindBearing() const { return windBearing; }
+        double getCurrentlyWindBearing() const { return windBearing; }
         double getCurrentlyCloudCover() const { return cloudCover; }
 
         // Constants Representing the string(key) of the pair string:value of JSON objects.
@@ -82,7 +82,7 @@ namespace weatherserver {
         double humidity;
         double pressure;
         double windSpeed;
-    double windBearing;
+        double windBearing;
         double cloudCover;
     };
 }

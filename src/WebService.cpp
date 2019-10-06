@@ -3,7 +3,7 @@
 namespace weatherserver {
 
     const uint16_t WebService::OPC_NS_INDEX = 1;
-    const utility::string_t WebService::ENDPOINT_API_OPENAQ = U("https://api.openaq.org/v1/");
+    const utility::string_t WebService::ENDPOINT_API_OPENAQ = U("https://api.openaq.org/v1");
     const utility::string_t WebService::PATH_API_OPENAQ_COUNTRIES = U("countries");
     const utility::string_t WebService::PATH_API_OPENAQ_LOCATIONS = U("locations");
     const utility::string_t WebService::PATH_API_OPENAQ_MEASUREMENTS = U("measurements");
@@ -37,14 +37,8 @@ namespace weatherserver {
                 })
             .then([](web::json::value jsonValue)
                 {
-                    //complete jsonValue with meta data
-                    //std::wcout << jsonValue.serialize() << std::endl;
-
                     std::cout << "JSON extracted from fetchAllCountries() completed!" << std::endl;
                     auto results = jsonValue.at(U("results"));
-
-                    //just the "results" from jsonValue
-                    //std::wcout << results.serialize() << std::endl;
 
                     return results;
                 });
