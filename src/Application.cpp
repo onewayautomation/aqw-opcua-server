@@ -20,7 +20,7 @@ weatherserver::WebService* webService;
 UA_Boolean running = true;
 
 static void stopHandler(int sig) {
-    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "received ctrl-c");
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "received signal %d", sig);
     running = false;
 }
 
@@ -103,7 +103,14 @@ namespace weatherserver {
     consequently the data necessary needs to be searched from the node id and web service.
     */
     static UA_StatusCode readRequest(UA_Server* server, const UA_NodeId* sessionId, void* sessionContext,
-        const UA_NodeId* nodeId, void* nodeContext, UA_Boolean sourceTimeStamp, const UA_NumericRange* range, UA_DataValue* dataValue) {
+        const UA_NodeId* nodeId, void* nodeContext, UA_Boolean sourceTimeStamp, const UA_NumericRange* range, UA_DataValue* dataValue) 
+	{
+		(void)range; //TODO: for weather data it does not make sense to return range of values, check OPC UA Spec, maybe should return error in case if range is not null.
+		(void)sourceTimeStamp; //TODO: maybe this argument should be used.
+		(void)sessionContext;
+		(void)sessionId;
+		(void)server;
+		(void)nodeContext;
 
         if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == WebService::OPC_NS_INDEX) {
             size_t length = nodeId->identifier.string.length;
@@ -391,8 +398,6 @@ namespace weatherserver {
                     std::string locationName = country.getLocations().at(i).getName();
                     std::string locationCity = country.getLocations().at(i).getCity();
                     std::string locationCountryCode = country.getLocations().at(i).getCountryCode();
-                    double locationLatitude = country.getLocations().at(i).getLatitude();
-                    double locationLongitude = country.getLocations().at(i).getLongitude();
                     /* Creates the identifier for the node id of the new Location object
                     The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
                     std::string countries{ CountryData::COUNTRIES_FOLDER_NODE_ID };
@@ -428,7 +433,7 @@ namespace weatherserver {
                 }
                 }).wait();
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e) { //TODO - catch more specific type of exception
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
                 "Error on requestLocations method!");
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
@@ -526,7 +531,7 @@ namespace weatherserver {
                 }
                 }).wait();
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e) { //TODO - catch more specific type of exception
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
                 "Error on requestCountries method!");
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
@@ -743,6 +748,7 @@ int main(int argc, char* argv[]) {
         * if needed, the select with timeout on the multicast socket server->mdnsSocket (see example in mdnsd library)
         */
         UA_UInt16 timeout = UA_Server_run_iterate(server, waitInternal);
+		(void)timeout;
 
         // HERE you can add any node to the server you like.
         // Make sure that you only call any created method once in this loop.

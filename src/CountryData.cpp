@@ -36,7 +36,7 @@ namespace weatherserver {
             cities = json.at(KEY_CITIES).as_integer();
             locations = json.at(KEY_LOCATIONS).as_integer();
         }
-        catch (std::exception& ex)
+        catch (std::exception& ex) //TODO - catch more specific type of exception
         {
             std::cout << "Exception caught while parsing JSON file with countries data: " << ex.what() << std::endl
                 << "name (default - empty) = " << name << std::endl
@@ -66,8 +66,9 @@ namespace weatherserver {
                 }
             }
         }
-        catch (std::exception& ex)
+        catch (std::exception& ex) //TODO - catch more specific type of exception
         {
+			// TODO: Log exception message
             throw ex;
         }
 
