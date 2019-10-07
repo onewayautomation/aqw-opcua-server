@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <chrono>
 #include <ctime>
 
@@ -23,6 +24,7 @@ namespace weatherserver {
     */
     class LocationData {
     public:
+		LocationData(); //Default constructor to use in STL classes.
         LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude,
             bool hasBeenReceivedWeatherData = false, bool isInitialized = false, bool isAddingWeatherToAddressSpace = false);
         /*
@@ -46,7 +48,7 @@ namespace weatherserver {
         @return std::vector<LocationData> - A new vector of LocationData objects parsed from the
         JSON array returned from the API.
         */
-        static std::vector<LocationData> parseJsonArray(web::json::value& jsonArray);
+        static std::map<std::string, LocationData> parseJsonArray(web::json::value& jsonArray);
 
         void setHasBeenReceivedWeatherData(const bool received);
         void setIsInitialized(const bool initialized);

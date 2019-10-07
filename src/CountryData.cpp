@@ -21,7 +21,12 @@ namespace weatherserver {
         : CountryData{ "", code, 0, 0 }
     {}
 
-    CountryData CountryData::parseJson(web::json::value& json) {
+
+	CountryData::CountryData(): citiesNumber(0), locationsNumber(0), isInitialized(false)
+	{
+	}
+
+	CountryData CountryData::parseJson(web::json::value& json) {
 
         std::string name;
         std::string code;
@@ -47,8 +52,8 @@ namespace weatherserver {
         return CountryData(name, code, cities, locations);
     }
 
-    std::vector<CountryData> CountryData::parseJsonArray(web::json::value& jsonArray) {
-        std::vector<CountryData> vectorAllCountries;
+    std::map<std::string, CountryData> CountryData::parseJsonArray(web::json::value& jsonArray) {
+		std::map<std::string, CountryData> allCountries;
         try
         {
             if (jsonArray.is_array()) {
@@ -57,7 +62,7 @@ namespace weatherserver {
                     CountryData countryData = CountryData::parseJson(country);
                     if (!countryData.name.empty() && !countryData.code.empty())
                     {
-                        vectorAllCountries.push_back(countryData);
+						allCountries[countryData.code] = countryData;
                     }
                     else
                     {
@@ -72,15 +77,15 @@ namespace weatherserver {
             throw ex;
         }
 
-        std::cout << "Retrieved information for " << vectorAllCountries.size() << " countries" << std::endl;
-        return vectorAllCountries;
+        std::cout << "Retrieved information for " << allCountries.size() << " countries" << std::endl;
+        return std::move(allCountries);
     }
 
     void CountryData::setIsInitialized(const bool initialized) {
         isInitialized = initialized;
     }
 
-    void CountryData::setLocations(const std::vector<LocationData>& allLocations) {
+    void CountryData::setLocations(const std::map<std::string, LocationData>& allLocations) {
         locations = allLocations;
     }
 

@@ -25,7 +25,12 @@ namespace weatherserver {
         : LocationData{ name, "", countryCode, INVALID_LATITUDE, INVALID_LONGITUDE }
     {}
 
-    LocationData LocationData::parseJson(web::json::value& json) {
+
+	LocationData::LocationData():isInitialized(false), latitude(0), longitude(0)
+	{
+	}
+
+	LocationData LocationData::parseJson(web::json::value& json) {
         // Converts from wstring to string
         std::string lName = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
         std::string lCity = utility::conversions::to_utf8string(json.at(KEY_CITY_NAME).as_string());
@@ -46,8 +51,8 @@ namespace weatherserver {
         return LocationData(lName, lCity, lCountryCode, lLatitude, lLongittude);
     }
 
-    std::vector<LocationData> LocationData::parseJsonArray(web::json::value& jsonArray) {
-        std::vector<LocationData> vectorAllLocations;
+    std::map<std::string, LocationData> LocationData::parseJsonArray(web::json::value& jsonArray) {
+        std::map<std::string, LocationData> allLocations;
         if (jsonArray.is_array()) {
             for (size_t i{ 0 }; i < jsonArray.size(); i++) {
                 auto location = jsonArray[i];
@@ -56,11 +61,11 @@ namespace weatherserver {
                 //Only add the location to the vector if has valid coordinates.
                 if (locationData.getLatitude() != LocationData::INVALID_LATITUDE
                     && locationData.getLongitude() != LocationData::INVALID_LONGITUDE)
-                    vectorAllLocations.push_back(locationData);
+                    allLocations[locationData.name] = locationData;
             }
         }
 
-        return vectorAllLocations;
+        return allLocations;
     }
 
     void LocationData::setHasBeenReceivedWeatherData(const bool received) {

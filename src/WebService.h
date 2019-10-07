@@ -44,11 +44,11 @@ namespace weatherserver {
             pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
 
             void setServer(UA_Server* uaServer);
-            void setAllCountries(const std::vector<CountryData>& allCountries);
+            void setAllCountries(const std::map<std::string, CountryData>& allCountries);
 
             UA_Server* getServer() { return server; }
             const Settings& getSettings() { return settings; }
-            std::vector<CountryData>& getAllCountries() { return fetchedAllCountries; }
+            std::map<std::string, CountryData>& getAllCountries() { return fetchedAllCountries; }
 
             // Constants endpoints, keys, paths, querys etc to all the API services.
             static const uint16_t OPC_NS_INDEX;
@@ -78,6 +78,6 @@ namespace weatherserver {
 
             UA_Server* server { nullptr };
             Settings settings;
-            std::vector<CountryData> fetchedAllCountries{};
+            std::map<std::string, CountryData> fetchedAllCountries;
     };
 }

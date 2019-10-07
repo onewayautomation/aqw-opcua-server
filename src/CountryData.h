@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <cpprest/http_client.h>
 
@@ -16,6 +17,7 @@ namespace weatherserver {
     */
     class CountryData {
     public:
+		CountryData(); //Default constructor, required to use with STL classes.
         CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized = false);
         /*
         This constructor version is used for initialize temporary CountryData objects to look for them inside a vector of CountryData objects.
@@ -38,18 +40,18 @@ namespace weatherserver {
         @return std::vector<CountryData> - A new vector of CountryData objects parsed from the
         JSON array returned from the API.
         */
-        static std::vector<CountryData> parseJsonArray(web::json::value& jsonArray);
+        static std::map<std::string, CountryData> parseJsonArray(web::json::value& jsonArray);
 
-        /* Indetifies that this object node was added to the OPC UA address space. */
+        /* Identifies that this object node was added to the OPC UA address space. */
         void setIsInitialized(const bool initialized);
-        void setLocations(const std::vector<LocationData>& allLocations);
+        void setLocations(const std::map<std::string, LocationData>& allLocations);
 
         std::string getName() const { return name; }
         std::string getCode() const { return code; }
         uint32_t getCitiesNumber() const { return citiesNumber; }
         uint32_t getLocationsNumber() const { return locationsNumber; }
         bool getIsInitialized() const { return isInitialized; }
-        std::vector<LocationData>& getLocations() { return locations; }
+        std::map<std::string, LocationData>& getLocations() { return locations; }
 
         bool operator<(const CountryData& rhs) const;
         bool operator==(const CountryData& rhs) const;
@@ -74,6 +76,6 @@ namespace weatherserver {
         uint32_t citiesNumber;
         uint32_t locationsNumber;
         bool isInitialized;
-        std::vector<LocationData> locations {};
+		std::map<std::string, LocationData> locations;
     };
 }
