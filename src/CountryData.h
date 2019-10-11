@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <map>
 
 #include <cpprest/http_client.h>
 
@@ -16,12 +16,8 @@ namespace weatherserver {
     */
     class CountryData {
     public:
+        CountryData(); //Default constructor, required to use with STL classes.
         CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized = false);
-        /*
-        This constructor version is used for initialize temporary CountryData objects to look for them inside a vector of CountryData objects.
-        Example: when using find function from algorithm library.
-        */
-        CountryData(std::string code);
 
         /*
         Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -38,22 +34,18 @@ namespace weatherserver {
         @return std::vector<CountryData> - A new vector of CountryData objects parsed from the
         JSON array returned from the API.
         */
-        static std::vector<CountryData> parseJsonArray(web::json::value& jsonArray);
+        static std::map<std::string, CountryData> parseJsonArray(web::json::value& jsonArray);
 
-        /* Indetifies that this object node was added to the OPC UA address space. */
+        /* Identifies that this object node was added to the OPC UA address space. */
         void setIsInitialized(const bool initialized);
-        void setLocations(const std::vector<LocationData>& allLocations);
+        void setLocations(const std::map<std::string, LocationData>& allLocations);
 
         std::string getName() const { return name; }
         std::string getCode() const { return code; }
         uint32_t getCitiesNumber() const { return citiesNumber; }
         uint32_t getLocationsNumber() const { return locationsNumber; }
         bool getIsInitialized() const { return isInitialized; }
-        std::vector<LocationData>& getLocations() { return locations; }
-
-        bool operator<(const CountryData& rhs) const;
-        bool operator==(const CountryData& rhs) const;
-        bool operator!=(const CountryData& rhs) const;
+        std::map<std::string, LocationData>& getLocations() { return locations; }
 
         // Constants Representing the string(key) of the pair string:value of JSON objects.
         static const utility::string_t KEY_NAME; // Key country's name in the JSON result.
@@ -74,6 +66,6 @@ namespace weatherserver {
         uint32_t citiesNumber;
         uint32_t locationsNumber;
         bool isInitialized;
-        std::vector<LocationData> locations {};
+        std::map<std::string, LocationData> locations;
     };
 }

@@ -98,7 +98,7 @@ namespace weatherserver {
         server = uaServer;
     }
 
-    void WebService::setAllCountries(const std::vector<CountryData>& allCountries) {
+    void WebService::setAllCountries(const std::map<std::string, CountryData>& allCountries) {
         fetchedAllCountries = allCountries;
     }
 }

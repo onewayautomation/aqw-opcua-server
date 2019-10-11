@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <map>
 #include <chrono>
 #include <ctime>
 
@@ -23,13 +23,9 @@ namespace weatherserver {
     */
     class LocationData {
     public:
+        LocationData(); //Default constructor to use in STL classes.
         LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude,
             bool hasBeenReceivedWeatherData = false, bool isInitialized = false, bool isAddingWeatherToAddressSpace = false);
-        /*
-        This constructor version is used for initialize temporary LocationData objects to look for them inside a vector of LocationData objects.
-        Example: when using find function from algorithm library.
-        */
-        LocationData(std::string name, std::string countryCode);
 
         /*
         Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -46,7 +42,7 @@ namespace weatherserver {
         @return std::vector<LocationData> - A new vector of LocationData objects parsed from the
         JSON array returned from the API.
         */
-        static std::vector<LocationData> parseJsonArray(web::json::value& jsonArray);
+        static std::map<std::string, LocationData> parseJsonArray(web::json::value& jsonArray);
 
         void setHasBeenReceivedWeatherData(const bool received);
         void setIsInitialized(const bool initialized);
@@ -67,10 +63,6 @@ namespace weatherserver {
         bool getIsAddingWeatherToAddressSpace() const { return isAddingWeatherToAddressSpace; }
         WeatherData& getWeatherData() { return weatherData; }
         std::chrono::system_clock::time_point getReadLastTime() const { return readLastTime; }
-
-        bool operator<(const LocationData& rhs) const;
-        bool operator==(const LocationData& rhs) const;
-        bool operator!=(const LocationData& rhs) const;
 
         // Constants Representing the string(key) of the pair string:value of JSON objects.
         static const utility::string_t KEY_NAME;
