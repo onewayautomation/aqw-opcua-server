@@ -17,11 +17,6 @@ namespace weatherserver {
         : name{ name }, code{ code }, citiesNumber{ cities }, locationsNumber{ locations }, isInitialized{ isInitialized }
     {}
 
-    CountryData::CountryData(std::string code)
-        : CountryData{ "", code, 0, 0 }
-    {}
-
-
 	CountryData::CountryData(): citiesNumber(0), locationsNumber(0), isInitialized(false)
 	{
 	}
@@ -30,7 +25,6 @@ namespace weatherserver {
 
         std::string name;
         std::string code;
-        // added default values so there are no unitialized variable errors when parsing fails
         uint32_t cities = 0;
         uint32_t locations = 0;
 
@@ -41,44 +35,39 @@ namespace weatherserver {
             cities = json.at(KEY_CITIES).as_integer();
             locations = json.at(KEY_LOCATIONS).as_integer();
         }
-        catch (std::exception& ex) //TODO - catch more specific type of exception
+        catch (const web::json::json_exception& ex)
         {
             std::cout << "Exception caught while parsing JSON file with countries data: " << ex.what() << std::endl
-                << "name (default - empty) = " << name << std::endl
-                << "code (default - empty) = " << code << std::endl
-                << "cities (default - 0) = " << cities << std::endl
-                << "locations (default - 0) = " << locations << std::endl;
+                << "name = " << name << std::endl
+                << "code = " << code << std::endl
+                << "cities = " << cities << std::endl
+                << "locations = " << locations << std::endl;
         }
         return CountryData(name, code, cities, locations);
     }
 
     std::map<std::string, CountryData> CountryData::parseJsonArray(web::json::value& jsonArray) {
-		std::map<std::string, CountryData> allCountries;
-        try
-        {
-            if (jsonArray.is_array()) {
-                for (size_t i{ 0 }; i < jsonArray.size(); i++) {
-                    auto country = jsonArray[i];
-                    CountryData countryData = CountryData::parseJson(country);
-                    if (!countryData.name.empty() && !countryData.code.empty())
-                    {
-						allCountries[countryData.code] = countryData;
-                    }
-                    else
-                    {
-                        std::cout << "Country name or code is empty - skipped one entry." << std::endl;
-                    }
-                }
-            }
-        }
-        catch (std::exception& ex) //TODO - catch more specific type of exception
-        {
-			// TODO: Log exception message
-            throw ex;
-        }
 
-        std::cout << "Retrieved information for " << allCountries.size() << " countries" << std::endl;
-        return std::move(allCountries);
+      std::map<std::string, CountryData> allCountries;
+
+      if (jsonArray.is_array()) {
+          for (size_t i{ 0 }; i < jsonArray.size(); i++) {
+              auto country = jsonArray[i];
+              CountryData countryData = CountryData::parseJson(country);
+              if (!countryData.name.empty() && !countryData.code.empty())
+              {
+                allCountries[countryData.code] = countryData;
+              }
+              else
+              {
+                  std::cout << "Country name or code is empty - skipped one entry." << std::endl;
+              }
+          }
+      }
+
+    std::cout << "Retrieved information for " << allCountries.size() << " countries" << std::endl;
+
+    return allCountries;
     }
 
     void CountryData::setIsInitialized(const bool initialized) {
@@ -87,17 +76,5 @@ namespace weatherserver {
 
     void CountryData::setLocations(const std::map<std::string, LocationData>& allLocations) {
         locations = allLocations;
-    }
-
-    bool CountryData::operator<(const CountryData& rhs) const {
-        return this->code < rhs.code;
-    }
-
-    bool CountryData::operator==(const CountryData& rhs) const {
-        return this->code == rhs.code;
-    }
-
-    bool CountryData::operator!=(const CountryData& rhs) const {
-        return !(*this == rhs);
     }
 }

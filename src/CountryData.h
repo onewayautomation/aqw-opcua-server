@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <map>
 
 #include <cpprest/http_client.h>
@@ -17,13 +16,8 @@ namespace weatherserver {
     */
     class CountryData {
     public:
-		CountryData(); //Default constructor, required to use with STL classes.
+        CountryData(); //Default constructor, required to use with STL classes.
         CountryData(std::string name, std::string code, uint32_t cities, uint32_t locations, bool isInitialized = false);
-        /*
-        This constructor version is used for initialize temporary CountryData objects to look for them inside a vector of CountryData objects.
-        Example: when using find function from algorithm library.
-        */
-        CountryData(std::string code);
 
         /*
         Gets a new JSON value AS AN OBJECT from the cpprestsdk returned from the API request and
@@ -53,10 +47,6 @@ namespace weatherserver {
         bool getIsInitialized() const { return isInitialized; }
         std::map<std::string, LocationData>& getLocations() { return locations; }
 
-        bool operator<(const CountryData& rhs) const;
-        bool operator==(const CountryData& rhs) const;
-        bool operator!=(const CountryData& rhs) const;
-
         // Constants Representing the string(key) of the pair string:value of JSON objects.
         static const utility::string_t KEY_NAME; // Key country's name in the JSON result.
         static const utility::string_t KEY_CODE; // Key country's code in the JSON result.
@@ -76,6 +66,6 @@ namespace weatherserver {
         uint32_t citiesNumber;
         uint32_t locationsNumber;
         bool isInitialized;
-		std::map<std::string, LocationData> locations;
+        std::map<std::string, LocationData> locations;
     };
 }

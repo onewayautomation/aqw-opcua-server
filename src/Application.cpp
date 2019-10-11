@@ -103,7 +103,7 @@ namespace weatherserver {
     consequently the data necessary needs to be searched from the node id and web service.
     */
     static UA_StatusCode readRequest(UA_Server* server, const UA_NodeId* sessionId, void* sessionContext,
-        const UA_NodeId* nodeId, void* nodeContext, UA_Boolean sourceTimeStamp, const UA_NumericRange* range, UA_DataValue* dataValue) 
+        const UA_NodeId* nodeId, void* nodeContext, UA_Boolean sourceTimeStamp, const UA_NumericRange* range, UA_DataValue* dataValue)
 	{
 		(void)range; //TODO: for weather data it does not make sense to return range of values, check OPC UA Spec, maybe should return error in case if range is not null.
 		(void)sourceTimeStamp; //TODO: maybe this argument should be used.
@@ -125,8 +125,7 @@ namespace weatherserver {
             // Search for the country in the list of countries of the web service.
 			auto& countries = webService->getAllCountries();
 			auto itCountry = countries.find(countryCode);
-			if (itCountry != countries.end())
-			{
+			if (itCountry != countries.end()) {
 				/*
 				The location name MAY be returned at position 13 until the first '.' after that.
 				When looking for a specific location, check if it was found (iterator) because some locations has '.' in its name.
@@ -139,8 +138,7 @@ namespace weatherserver {
 				auto& locations = itCountry->second.getLocations();
 				auto itLocation = locations.find(locationName);
 
-				while (itLocation == locations.end() && posDot != std::string::npos)
-				{
+				while (itLocation == locations.end() && posDot != std::string::npos) {
 					posDot = nodeIdName.find(".", posDot + 1);
 					if (posDot != std::string::npos)
 						locationName = nodeIdName.substr(13, posDot - 13);
@@ -149,8 +147,7 @@ namespace weatherserver {
 					itLocation = locations.find(locationName);
 				}
 
-				if (itLocation != locations.end())
-				{
+				if (itLocation != locations.end()) {
 					/*
 					The variable name will be returned at position after the first '.' of the search of the location
 					until the end of the node id.
@@ -183,8 +180,7 @@ namespace weatherserver {
 					updateWeatherVariables(dataValue, location.getWeatherData(), weatherVariableName);
 				}
 			}
-			else
-			{
+			else {
 				// TODO: Log
 			}
         }
@@ -402,14 +398,12 @@ namespace weatherserver {
     */
     static void requestLocations(UA_Server* server, CountryData& country, UA_NodeId parentNodeId) {
         try {
-            // ReSharper disable once CppExpressionWithoutSideEffects
-            webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response) 
+            webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response)
 			{
                 country.setLocations(LocationData::parseJsonArray(response));
 				// Note that both itLocation and location variables are used as reference to the original object, not copy.
 				// Therefore changes apply to originals.
-                for (auto& itLocation : country.getLocations()) 
-				{
+                for (auto& itLocation : country.getLocations()) {
 					auto& location = itLocation.second;
                     std::string locationName = location.getName();
                     std::string locationCity = location.getCity();
@@ -427,7 +421,7 @@ namespace weatherserver {
                     char desc[] = "Location object containing weather information";
                     locationObjAttr.description = UA_LOCALIZEDTEXT(locale, desc);
                     locationObjAttr.displayName = UA_LOCALIZEDTEXT(locale, const_cast<char*>(locationName.c_str()));
-                    
+
 					auto addResult = UA_Server_addObjectNode(server, locationObjId, parentNodeId,
                         UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
                         UA_QUALIFIEDNAME(WebService::OPC_NS_INDEX, const_cast<char*>(locationName.c_str())),
@@ -448,7 +442,7 @@ namespace weatherserver {
 							UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), flagInitializeVarAttr, NULL, NULL);
 						if (addVariableResult != UA_STATUSCODE_GOOD)
 						{
-							UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, 
+							UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
 								"Failed to add OPC UA node for variable %s.%s.%s, error code = 0x%x",
 								locationCountryCode.c_str(), locationName.c_str(), flagInitializeVarNameId.c_str(), addResult);
 						}
@@ -612,17 +606,14 @@ namespace weatherserver {
     When clients request to read any specific location object node, the weather data of that location will be downloaded or updated.
     The default function from UA_Nodestore from the UA_ServerConfig needs to be returned.
     */
-    const UA_Node* customGetNode(void* nodestoreContext, const UA_NodeId* nodeId) 
-	{
-		// Withing this function nodes are added dynamically at runtime. 
+    const UA_Node* customGetNode(void* nodestoreContext, const UA_NodeId* nodeId) {
+		// Withing this function nodes are added dynamically at runtime.
 		// Before adding new node, SDK checks if it exists, by calling getNode function: on those calls need to call original function.
 		// Variable "processing" is used to make sure that when nodes are added original function is used.
 		static bool processing = false;
-		if (!processing)
-		{
+		if (!processing) {
 			processing = true;
-			if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == WebService::OPC_NS_INDEX) 
-			{
+			if (nodeId->identifierType == UA_NODEIDTYPE_STRING && nodeId->namespaceIndex == WebService::OPC_NS_INDEX) {
 				size_t length = nodeId->identifier.string.length;
 				UA_Byte* data = nodeId->identifier.string.data;
 				std::string nodeIdName(reinterpret_cast<char*>(data), length);
@@ -638,13 +629,11 @@ namespace weatherserver {
 					// Search for the country in the list of countries of the web service.
 					auto& allCountries = webService->getAllCountries();
 					auto itCountry = allCountries.find(countryCode);
-					if (itCountry != allCountries.end())
-					{
+					if (itCountry != allCountries.end()) {
 						auto& country = itCountry->second;
 
 						// Only download locations if they don't exist and the country has been initialized (added to the address space).
-						if (country.getIsInitialized())
-						{
+						if (country.getIsInitialized()) {
 							if (country.getLocations().size() == 0)
 								requestLocations(webService->getServer(), country, countryObjId);
 
@@ -663,40 +652,35 @@ namespace weatherserver {
 								std::string locationName;
 
 								/* If we don't find the dot on the first search, for sure that is not a request to read the location. */
-								if (posDot != std::string::npos) 
-								{
+								if (posDot != std::string::npos) {
 									/* The location name MAY be returned at position 13 until the first '.' after that. */
 									locationName = nodeIdName.substr(13, posDot - 13);
- 
+
 									// Search for the location in the list of locations inside the country of the web service.
 									auto& locations = country.getLocations();
 									auto itLocation = locations.find(locationName);
 									/* While the location is not found, continue checking for dots within its name. */
-									while (itLocation == locations.end() && posDot != std::string::npos) 
-									{
+									while (itLocation == locations.end() && posDot != std::string::npos) {
 										posDot = nodeIdName.find(".", posDot + 1);
 										if (posDot != std::string::npos)
 											locationName = nodeIdName.substr(13, posDot - 13);
 										else
 											locationName = nodeIdName.substr(13);
 										itLocation = locations.find(locationName);
-									}									
-									if (itLocation != locations.end())
-									{
+									}
+									if (itLocation != locations.end()) {
 										auto& location = itLocation->second;
 										std::string locationObjNameId = countryObjNameId + "." + locationName;
 										/*
 										The location name was found correctly. Check if there are more characters after the location name comparing the full node id name's size to the node id until the location name.
 										*/
-										if (nodeIdName.size() > locationObjNameId.size())
-										{
+										if (nodeIdName.size() > locationObjNameId.size()) {
 											UA_NodeId locationObjId = UA_NODEID_STRING(WebService::OPC_NS_INDEX, const_cast<char*>(locationObjNameId.c_str()));
 											/*
 											Only try to download weather data if they not exist in the address space.
 											The isAddingWeatherToAddressSpace boolean variable in LocationData controls when we are adding the weather data in the OPC UA address space, that being said the requestWeather function bellow will not be called more than once.
 											*/
-											if (location.getIsInitialized() && !(location.getHasBeenReceivedWeatherData()) && !(location.getIsAddingWeatherToAddressSpace()))
-											{
+											if (location.getIsInitialized() && !(location.getHasBeenReceivedWeatherData()) && !(location.getIsAddingWeatherToAddressSpace())) {
 												requestWeather(webService->getServer(), location, locationObjId);
 											}
 										}
@@ -716,7 +700,7 @@ namespace weatherserver {
 
 int main(int argc, char* argv[]) {
 
-    std::string settingsPath = "";
+    std::string settingsPath;
 
     if (argc > 1) {
         settingsPath = argv[1];
@@ -753,25 +737,6 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, stopHandler);
     signal(SIGTERM, stopHandler);
 
-    //UA_Server *server = UA_Server_new();
-    //UA_ServerConfig *config = UA_Server_getConfig(server);
-
-    //UA_Nodestore* ns = (UA_Nodestore*) UA_Server_getNodestore(server);
-
-    //defaultGetNode = ns->getNode;
-
-    //ns->getNode = customGetNode;
-
-    //UA_ServerConfig_setDefault(config);
-    /* 1.0rc5 version
-
-    UA_Server* server = UA_Server_new();
-    UA_ServerConfig_setDefault(UA_Server_getConfig(server));
-
-    */
-
-    // 0.3 version
-
     UA_ServerConfig* config = UA_ServerConfig_new_default();
 
     if (!settings.hostName.empty()) {
@@ -785,43 +750,13 @@ int main(int argc, char* argv[]) {
 
     UA_Server* server = UA_Server_new(config);
 
-
     webService->setServer(server);
-
-    /* Should the server networklayer block (with a timeout) until a message
-    arrives or should it return immediately? */
-    UA_Boolean waitInternal = false;
-
-    UA_StatusCode retval = UA_Server_run_startup(server);
-    if (retval != UA_STATUSCODE_GOOD) {
-        std::cout << "Couldn't start the UA server. Terminating..." << std::endl;
-        return EXIT_FAILURE;
-	}
 
     weatherserver::addCountries(server);
 
-    while (running) 
-	{
-        /* timeout is the maximum possible delay (in millisec) until the next
-        _iterate call. Otherwise, the server might miss an internal timeout
-        or cannot react to messages with the promised responsiveness. */
-        /* If multicast discovery server is enabled, the timeout does not not consider new input data (requests) on the mDNS socket.
-        * It will be handled on the next call, which may be too late for requesting clients.
-        * if needed, the select with timeout on the multicast socket server->mdnsSocket (see example in mdnsd library)
-        */
-        UA_UInt16 timeout = UA_Server_run_iterate(server, waitInternal);
-		if (timeout > 1)
-			timeout = 1;
-        /* Now we can use the max timeout to do something else. In this case, we just sleep. */
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
-    }
-    retval = UA_Server_run_shutdown(server);
+    UA_StatusCode retval = UA_Server_run(server, &running);
+
     UA_Server_delete(server);
-
-    //UA_ServerConfig_clean(config);
-
-    //0.3 version. no config delete in 1.0rc5
-
     UA_ServerConfig_delete(config);
 
     return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
