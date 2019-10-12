@@ -1,0 +1,16 @@
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
+root = true
+
+# All files
+[*]
+end_of_line = unset
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Indentation and spacing
+indent_size = 2
+indent_style = space
+
+[*.md]
+indent_size = 4

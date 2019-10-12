@@ -1,17 +1,17 @@
 {
-    "opc_ua_server": {
-        "port-number":48484,
-        "endpoint-url": "opc.tcp://localhost:48484",
-        "host-name": "localhost"
-    },
+  "opc_ua_server": {
+    "port-number": 48484,
+    "endpoint-url": "opc.tcp://localhost:48484",
+    "host-name": "localhost"
+  },
 
-    "openaq_api": {
+  "openaq_api": {
 
-    },
-    
-    "darksky_api": {
-        "api_key": "PUT YOUR API KEY FROM DARK SKY HERE",
-        "param_units": "si",
-        "interval_download": 15
-    }
+  },
+
+  "darksky_api": {
+    "api_key": "PUT YOUR API KEY FROM DARK SKY HERE",
+    "param_units": "si",
+    "interval_download": 15
+  }
 }
