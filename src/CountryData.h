@@ -47,8 +47,8 @@ namespace weatherserver {
 
     void setLocations(const std::map<std::string, LocationData>& allLocations);
 
-    std::string getName() const { return name; }
-    std::string getCode() const { return code; }
+    const std::string& getName() const { return name; }
+    const std::string& getCode() const { return code; }
     uint32_t getCitiesNumber() const { return citiesNumber; }
     uint32_t getLocationsNumber() const { return locationsNumber; }
     bool getIsInitialized() const { return isInitialized; }

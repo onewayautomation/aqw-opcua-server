@@ -59,12 +59,12 @@ namespace weatherserver {
     //Identifies that weather data variable nodes are currently being added to the OPC UA information model.
     void setIsAddingWeatherToAddressSpace(const bool addingWeatherToAddressSpace);
 
-    void setWeatherData(const WeatherData weather);
-    void setReadLastTime(const std::chrono::system_clock::time_point time);
+    void setWeatherData(const WeatherData& weather);
+    void setReadLastTime(const std::chrono::system_clock::time_point& time);
 
-    std::string getName() const { return name; }
-    std::string getCity() const { return city; }
-    std::string getCountryCode() const { return countryCode; }
+    const std::string& getName() const { return name; }
+    const std::string& getCity() const { return city; }
+    const std::string& getCountryCode() const { return countryCode; }
     double getLatitude() const { return latitude; }
     double getLongitude() const { return longitude; }
 
