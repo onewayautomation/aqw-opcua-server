@@ -32,15 +32,13 @@ namespace weatherserver {
     uint32_t cities = 0;
     uint32_t locations = 0;
 
-    try
-    {
+    try {
       name = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
       code = utility::conversions::to_utf8string(json.at(KEY_CODE).as_string());
       cities = json.at(KEY_CITIES).as_integer();
       locations = json.at(KEY_LOCATIONS).as_integer();
     }
-    catch (const web::json::json_exception & ex)
-    {
+    catch (const web::json::json_exception & ex) {
       std::cout << "Exception caught while parsing JSON object with country data: " << ex.what() << std::endl
         << "name = " << name << std::endl
         << "code = " << code << std::endl

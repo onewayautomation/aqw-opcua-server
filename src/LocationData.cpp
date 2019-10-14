@@ -15,14 +15,14 @@ namespace weatherserver {
 
   LocationData::LocationData(std::string name, std::string city, std::string countryCode, double latitude, double longitude,
     bool hasBeenReceivedWeatherData, bool isInitialized, bool isAddingWeatherToAddressSpace)
-    : name{ name },
-      city{ city },
-      countryCode{ countryCode },
-      latitude{ latitude },
-      longitude{ longitude },
-      hasBeenReceivedWeatherData{ hasBeenReceivedWeatherData },
-      isInitialized{ isInitialized },
-      isAddingWeatherToAddressSpace{ isAddingWeatherToAddressSpace }
+    : name { name },
+      city { city },
+      countryCode { countryCode },
+      latitude { latitude },
+      longitude { longitude },
+      hasBeenReceivedWeatherData { hasBeenReceivedWeatherData },
+      isInitialized { isInitialized },
+      isAddingWeatherToAddressSpace { isAddingWeatherToAddressSpace }
   {
     readLastTime = std::chrono::system_clock::now();
   }
@@ -62,6 +62,7 @@ namespace weatherserver {
         << "longitude = " << lLongitude << std::endl
         << "latitude = " << lLatitude << std::endl;
     }
+
     return LocationData(lName, lCity, lCountryCode, lLatitude, lLongitude);
   }
 
@@ -83,6 +84,7 @@ namespace weatherserver {
         }
       }
     }
+
     return allLocations;
   }
 
@@ -98,11 +100,11 @@ namespace weatherserver {
     isAddingWeatherToAddressSpace = addingWeatherToAddressSpace;
   }
 
-  void LocationData::setWeatherData(const WeatherData weather) {
+  void LocationData::setWeatherData(const WeatherData& weather) {
     weatherData = weather;
   }
 
-  void LocationData::setReadLastTime(const std::chrono::system_clock::time_point time) {
+  void LocationData::setReadLastTime(const std::chrono::system_clock::time_point& time) {
     readLastTime = time;
   }
 }

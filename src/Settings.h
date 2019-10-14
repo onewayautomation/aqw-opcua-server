@@ -41,7 +41,7 @@ namespace weatherserver {
     This function supposed to be called from constructor only.
     If there is a problem opening file, parsing it or Dark Sky API key seems to be invalid - set the flag to terminate the program.
     */
-    void processSettingsFile(const std::string& currentDir);
+    void processSettingsFile(const std::string& settingsFilePath);
 
     /*
     This function supposed to be called from processSettingsFile only.

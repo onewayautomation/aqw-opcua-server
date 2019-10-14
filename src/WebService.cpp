@@ -68,7 +68,7 @@ namespace weatherserver {
         });
   }
 
-  pplx::task<web::json::value> WebService::fetchWeather(const double& latitude, const double& longitude) {
+  pplx::task<web::json::value> WebService::fetchWeather(const double latitude, const double longitude) {
 
     std::string coordinatesPath = std::to_string(latitude) + "," + std::to_string(longitude);
     std::string excludeQuery = WebService::PARAM_VALUE_API_DARKSKY_MINUTELY

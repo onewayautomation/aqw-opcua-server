@@ -46,7 +46,7 @@ namespace weatherserver {
 
     Check the WeatherData class to see the JSON representation.
     */
-    pplx::task<web::json::value> fetchWeather(const double& latitude, const double& longitude);
+    pplx::task<web::json::value> fetchWeather(const double latitude, const double longitude);
 
     void setServer(UA_Server* uaServer);
     void setAllCountries(const std::map<std::string, CountryData>& allCountries);
