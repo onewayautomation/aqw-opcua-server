@@ -393,6 +393,70 @@ namespace weatherserver {
   }
 
   /*
+  Checking if locations number in the server model matches with passed value. Trying to adjust if its different.
+  Returns true if:
+      - model locations number was successfuly read and already matches with passed value;
+      - value is different, but adjustment (write) was successful.
+  Returns false if:
+      - couldn't read existing value from the model;
+      - existing value was different and adjustment (write) failed.
+  */
+  static bool validateLocationsNumberInTheModel(UA_Server& server, const CountryData& country, uint32_t valueToValidate) {
+
+    bool validationFlag = false;
+
+    //crafting NodeID for our locations number attribute inside the information model
+    std::string locationsNumberAttributeString = std::string(CountryData::COUNTRIES_FOLDER_NODE_ID) + "."
+      + country.getCode() + "." + std::string(CountryData::BROWSE_LOCATIONS_NUMBER);
+
+    std::cout << "Checking locations number for the following ID: " << locationsNumberAttributeString << std::endl;
+
+    UA_NodeId locationsNumberAttributeNodeId = UA_NODEID_STRING(WebService::OPC_NS_INDEX,
+      const_cast<char*>(locationsNumberAttributeString.c_str()));
+
+    UA_Variant valueInModel;
+    UA_Variant_init(&valueInModel);
+    UA_StatusCode retvalRead = UA_Server_readValue(&server, locationsNumberAttributeNodeId, &valueInModel);
+
+    if (retvalRead == UA_STATUSCODE_GOOD && UA_Variant_hasScalarType(&valueInModel, &UA_TYPES[UA_TYPES_UINT32])) {
+
+      UA_UInt32 valueInModelUInt = *(UA_UInt32*)valueInModel.data;
+      std::cout << "Value in the information model: " << valueInModelUInt << std::endl;
+
+      UA_UInt32 valueToValidateUInt = valueToValidate;
+      std::cout << "Actual value: " << valueToValidateUInt << std::endl;
+
+      if (valueInModelUInt != valueToValidateUInt) {
+        std::cout << "Trying to adjust..." << std::endl;
+
+        UA_Variant_setScalarCopy(&valueInModel, &valueToValidateUInt, &UA_TYPES[UA_TYPES_UINT32]);
+        UA_StatusCode retvalWrite = UA_Server_writeValue(&server, locationsNumberAttributeNodeId, valueInModel);
+
+        if (retvalWrite == UA_STATUSCODE_GOOD) {
+
+          std::cout << "Successfuly put new value in the model. " << std::endl;
+          validationFlag = true;
+        }
+        else {
+          //validationFlag still false
+          std::cout << "Adjustment failed." << std::endl;
+        }
+      }
+      else {
+        std::cout << "Number of locations in the model already matches with actual value." << std::endl;
+        validationFlag = true;
+      }
+    }
+    else {
+      //validationFlag still false
+      std::cout << "Coudn't check number of locations in the information model for this country: " << country.getName() << std::endl;
+    }
+
+    UA_Variant_deleteMembers(&valueInModel);
+    return validationFlag;
+  }
+
+  /*
   Request locations from the web service for the specified "country". Add them as ObjectNodes to the OPC UA information model.
   Add VariableNode with "initialized" flag for them.
 
@@ -400,9 +464,26 @@ namespace weatherserver {
   */
   static void requestLocations(UA_Server* server, CountryData& country, const UA_NodeId& parentCountryNodeId) {
     try {
-      webService->fetchAllLocations(country.getCode(), country.getLocationsNumber()).then([&](web::json::value response)
+
+      uint32_t currentLocationsNumber = country.getLocationsNumber();
+
+      webService->fetchAllLocations(country.getCode(), currentLocationsNumber).then([&](web::json::value response)
         {
           country.setLocations(LocationData::parseJsonArray(response));
+
+          uint32_t parseMapSize = (uint32_t)country.getLocations().size();
+
+          if (currentLocationsNumber != parseMapSize) {
+            std::cout << "Locations number parameter for this country doesn't match with actual JSON parse. Validating the model..." << std::endl;
+            if (validateLocationsNumberInTheModel(*server, country, parseMapSize)) {
+              country.setLocationsNumber(parseMapSize);
+              std::cout << "Validation successful. New locations number: " << parseMapSize << std::endl;
+            }
+            else {
+              std::cout << "Validation failed. Keeping current number." << std::endl;
+            }
+          }
+
           // Note that both itLocation and location variables are used as reference to the original object, not copy.
           // Therefore changes apply to originals.
           for (auto& itLocation : country.getLocations()) {
