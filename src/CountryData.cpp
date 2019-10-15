@@ -71,6 +71,10 @@ namespace weatherserver {
     return allCountries;
   }
 
+  void CountryData::setLocationsNumber(const uint32_t newLocationsNumber) {
+    locationsNumber = newLocationsNumber;
+  }
+
   void CountryData::setIsInitialized(const bool initialized) {
     isInitialized = initialized;
   }
