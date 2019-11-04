@@ -176,10 +176,7 @@ namespace weatherserver {
                 }).wait();
             }
             catch (const std::exception & e) {
-              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-                "Error on requestWeather method!");
-              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-                e.what());
+              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestWeather method: [%s]", e.what());
             }
           }
           updateWeatherVariable(*dataValue, location.getWeatherData(), weatherVariableName);
@@ -541,10 +538,7 @@ namespace weatherserver {
         }).wait();
     }
     catch (const std::exception & e) { //TODO - catch more specific type of exception
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        "Error on requestLocations method!");
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        e.what());
+      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestLocations method: [%s]", e.what());
     }
   }
 
@@ -641,10 +635,7 @@ namespace weatherserver {
         }).wait();
     }
     catch (const std::exception & e) { //TODO - catch more specific type of exception
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        "Error on requestCountries method!");
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        e.what());
+      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestCountries method: [%s]",  e.what());
     }
   }
 
