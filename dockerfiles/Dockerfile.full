@@ -34,7 +34,8 @@ FROM build-restsdk AS build-wserv
 
 WORKDIR /src
 
-RUN git clone https://github.com/ehnat0n/aqw-opcua-server.git
+#RUN git clone https://github.com/ehnat0n/aqw-opcua-server.git
+RUN git clone --branch docker https://github.com/onewayautomation/aqw-opcua-server.git
 
 WORKDIR ./aqw-opcua-server/build
 
