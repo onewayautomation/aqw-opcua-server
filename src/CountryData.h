@@ -45,6 +45,8 @@ namespace weatherserver {
     //Identifies that this object node was added to the OPC UA information model.
     void setIsInitialized(const bool initialized);
 
+    void setLocationsNumber(const uint32_t newLocationsNumber);
+
     void setLocations(const std::map<std::string, LocationData>& allLocations);
 
     const std::string& getName() const { return name; }

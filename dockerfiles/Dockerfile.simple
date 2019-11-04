@@ -1,0 +1,11 @@
+FROM ubuntu:bionic
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/weather-server
+
+COPY build/bin/aqw-opcua-server ./
+
+ENTRYPOINT ["./aqw-opcua-server"]
