@@ -44,7 +44,7 @@ namespace weatherserver {
         });
   }
 
-  pplx::task<web::json::value> WebService::fetchAllLocations(const std::string& countryName, const uint32_t limit) {
+  web::json::value WebService::fetchAllLocations(const std::string& countryName, const uint32_t limit) {
 
     web::uri_builder uriBuilder(ENDPOINT_API_OPENAQ);
     uriBuilder.append_path(PATH_API_OPENAQ_LOCATIONS);
@@ -53,19 +53,45 @@ namespace weatherserver {
 
     web::http::client::http_client client(uriBuilder.to_string());
 
-    return client.request(web::http::methods::GET)
-      .then([](web::http::http_response requestResponse)
-        {
-          std::cout << "fetchAllLocations() request completed!" << std::endl;
+    web::json::value allLocations;
 
-          return requestResponse.extract_json();
-        })
-      .then([](web::json::value jsonValue)
-        {
-          std::cout << "JSON extracted from fetchAllLocations() completed!" << std::endl;
-          auto results = jsonValue.at(U("results"));
-          return results;
-        });
+    try {
+
+        allLocations = client.request(web::http::methods::GET)
+        .then([this, &countryName, limit](web::http::http_response requestResponse)
+          {
+            std::cout << "fetchAllLocations() request completed!" << std::endl;
+
+            return requestResponse.extract_json();
+          })
+        .then([this, &countryName, limit](web::json::value jsonValue)
+          {
+            std::cout << "JSON extracted from fetchAllLocations() completed!" << std::endl;
+
+            auto metaData = jsonValue.at(U("meta"));
+            size_t foundResultsNumber = metaData.at(U("found")).as_integer();
+
+            web::json::value result;
+
+            if (foundResultsNumber <= limit) {
+              result = jsonValue.at(U("results"));
+            }
+            else {
+              result = this->fetchAllLocations(countryName, foundResultsNumber);
+            }
+
+            return result;
+          }).get();
+
+    }
+    catch (const std::exception & e) {
+      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+        "Error on fetchAllLocations method!");
+      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
+        e.what());
+      return web::json::value();
+    }
+    return allLocations;
   }
 
   pplx::task<web::json::value> WebService::fetchWeather(const double latitude, const double longitude) {
