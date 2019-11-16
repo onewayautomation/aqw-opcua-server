@@ -17,7 +17,7 @@ namespace weatherserver {
   const std::string WebService::PARAM_VALUE_API_DARKSKY_HOURLY = "hourly";
   const std::string WebService::PARAM_VALUE_API_DARKSKY_DAILY = "daily";
 
-  WebService::WebService(const Settings& settingsObj)
+  WebService::WebService(std::shared_ptr<Settings> settingsObj)
     : settings(settingsObj) {}
 
   pplx::task<web::json::value> WebService::fetchAllCountries() {
@@ -104,10 +104,10 @@ namespace weatherserver {
       + "," + WebService::PARAM_VALUE_API_DARKSKY_DAILY;
 
     web::uri_builder uriBuilder(ENDPOINT_API_DARKSKY);
-    uriBuilder.append_path(settings.getKeyApiDarksky());
+    uriBuilder.append_path(settings->getKeyApiDarksky());
     uriBuilder.append_path(utility::conversions::to_string_t(coordinatesPath));
     uriBuilder.append_query(WebService::PARAM_API_DARKSKY_EXCLUDE, utility::conversions::to_string_t(excludeQuery));
-    uriBuilder.append_query(WebService::PARAM_API_DARKSKY_UNITS, settings.getUnits());
+    uriBuilder.append_query(WebService::PARAM_API_DARKSKY_UNITS, settings->getUnits());
 
     web::http::client::http_client client(uriBuilder.to_string());
 

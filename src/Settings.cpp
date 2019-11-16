@@ -9,6 +9,18 @@ namespace weatherserver {
   const utility::string_t Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
   const utility::string_t Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
 
+
+  std::map<std::string, weatherserver::CountryData>& Settings::getCountries()
+  {
+    return countries;
+  }
+
+
+  std::map<std::string, weatherserver::LocationData>& Settings::getLocations(const std::string& countryCode)
+  {
+    return locations[countryCode];
+  }
+
   Settings::Settings(const std::string& settingsFilePath) {
     keyApiDarksky = U("");
     units = U("si");
@@ -46,6 +58,49 @@ namespace weatherserver {
       this->endpointUrl = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("endpoint-url")).as_string());
       this->hostName = utility::conversions::to_utf8string(jsonFile.at(U("opc_ua_server")).at(U("host-name")).as_string());
 
+      if (jsonFile.has_field(U("countries")))
+      {
+        auto& countriesField = jsonFile.at(U("countries"));
+        if (countriesField.is_array())
+        {
+          for (size_t index = 0; index < countriesField.as_array().size(); index++)
+          {
+            web::json::value& c = countriesField.as_array()[index];
+            try {
+              std::string name;
+              std::string code;
+              auto& locationsField = c.at(U("locations"));
+              CountryData cd(
+                utility::conversions::to_utf8string(c.at(U("name")).as_string()),
+                utility::conversions::to_utf8string(c.at(U("code")).as_string()),
+                0, locationsField.as_array().size());
+              countries[cd.getCode()] = cd;
+
+              for (size_t l = 0; l < locationsField.as_array().size(); l++)
+              {
+                std::map<std::string, LocationData> locationsMap;
+                
+                std::string locationName;
+                std::string city;
+                std::string countryCode;
+                double latitude = 0;
+                double longitude = 0;
+
+                web::json::value& location = locationsField.as_array()[l];
+                locationName = utility::conversions::to_utf8string(location.at(U("name")).as_string());
+                latitude = location.at(U("latitude")).as_double();
+                longitude = location.at(U("longitude")).as_double();
+                LocationData ld(locationName, city, cd.getCode(), latitude, longitude);
+                locations[cd.getCode()][ld.getName()] = ld;
+              }
+            }
+            catch (const web::json::json_exception & e)
+            {
+              std::cout << "Settings file has invalid countries settings: error [" << e.what() << "]" << std::endl;
+            }
+          }
+        }
+      }
       std::cout << "Build completed successfully!!!" << std::endl;
     }
     catch (const web::json::json_exception & e) {
