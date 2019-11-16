@@ -460,85 +460,76 @@ namespace weatherserver {
   @param parentCountryNodeId - nodeId for our "country". We use it as a parent for all locations in OPC UA model.
   */
   static void requestLocations(UA_Server* server, CountryData& country, const UA_NodeId& parentCountryNodeId) {
-    try {
 
-      uint32_t currentLocationsNumber = country.getLocationsNumber();
+    uint32_t currentLocationsNumber = country.getLocationsNumber();
 
-      webService->fetchAllLocations(country.getCode(), currentLocationsNumber).then([&](web::json::value response)
-        {
-          country.setLocations(LocationData::parseJsonArray(response));
+    auto response = webService->fetchAllLocations(country.getCode(), currentLocationsNumber);
 
-          uint32_t parseMapSize = (uint32_t)country.getLocations().size();
+    country.setLocations(LocationData::parseJsonArray(response));
 
-          if (currentLocationsNumber != parseMapSize) {
-            std::cout << "Locations number parameter for this country doesn't match with actual JSON parse. Validating the model..." << std::endl;
-            if (validateLocationsNumberInTheModel(*server, country, parseMapSize)) {
-              country.setLocationsNumber(parseMapSize);
-              std::cout << "Validation successful. New locations number: " << parseMapSize << std::endl;
-            }
-            else {
-              std::cout << "Validation failed. Keeping current number." << std::endl;
-            }
-          }
+    uint32_t parseMapSize = (uint32_t)country.getLocations().size();
 
-          // Note that both itLocation and location variables are used as reference to the original object, not copy.
-          // Therefore changes apply to originals.
-          for (auto& itLocation : country.getLocations()) {
-            auto& location = itLocation.second;
-            std::string locationName = location.getName();
-            std::string locationCity = location.getCity();
-            std::string locationCountryCode = location.getCountryCode();
-            /* Creates the identifier for the node id of the new Location object
-            The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
-            std::string countries{ CountryData::COUNTRIES_FOLDER_NODE_ID };
-            std::string locationObjNameId =
-              static_cast<std::string>(CountryData::COUNTRIES_FOLDER_NODE_ID)
-              + "." + locationCountryCode + "." + locationName;
-            /* Creates an Location object node containing all the weather information related to it. */
-            UA_NodeId locationObjId = UA_NODEID_STRING(WebService::OPC_NS_INDEX, const_cast<char*>(locationObjNameId.c_str()));
-            UA_ObjectAttributes locationObjAttr = UA_ObjectAttributes_default;
-            char locale[] = "en-US";
-            char desc[] = "Location object containing weather information";
-            locationObjAttr.description = UA_LOCALIZEDTEXT(locale, desc);
-            locationObjAttr.displayName = UA_LOCALIZEDTEXT(locale, const_cast<char*>(locationName.c_str()));
-
-            auto addResult = UA_Server_addObjectNode(server, locationObjId, parentCountryNodeId,
-              UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-              UA_QUALIFIEDNAME(WebService::OPC_NS_INDEX, const_cast<char*>(locationName.c_str())),
-              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), locationObjAttr, NULL, NULL);
-            if (addResult == UA_STATUSCODE_GOOD)
-            {
-              std::string flagInitializeVarNameId = locationObjNameId + "." + LocationData::BROWSE_FLAG_INITIALIZE;
-              UA_NodeId flagInitializeVarNodeId = UA_NODEID_STRING(WebService::OPC_NS_INDEX, const_cast<char*>(flagInitializeVarNameId.c_str()));
-              UA_VariableAttributes flagInitializeVarAttr = UA_VariableAttributes_default;
-              UA_Boolean flagInitializeValue = true;
-              UA_Variant_setScalar(&flagInitializeVarAttr.value, &flagInitializeValue, &UA_TYPES[UA_TYPES_BOOLEAN]);
-              char flagInitializeAttrDesc[] = "Auxiliary variable to indicate when to download weather data for this location.";
-              flagInitializeVarAttr.description = UA_LOCALIZEDTEXT(locale, flagInitializeAttrDesc);
-              flagInitializeVarAttr.displayName = UA_LOCALIZEDTEXT(locale, LocationData::BROWSE_FLAG_INITIALIZE);
-              auto addVariableResult = UA_Server_addVariableNode(server, flagInitializeVarNodeId, locationObjId,
-                UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
-                UA_QUALIFIEDNAME(WebService::OPC_NS_INDEX, LocationData::BROWSE_FLAG_INITIALIZE),
-                UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), flagInitializeVarAttr, NULL, NULL);
-              if (addVariableResult != UA_STATUSCODE_GOOD)
-              {
-                UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                  "Failed to add OPC UA node for variable %s.%s.%s, error code = 0x%x",
-                  locationCountryCode.c_str(), locationName.c_str(), flagInitializeVarNameId.c_str(), addResult);
-              }
-              location.setIsInitialized(true);
-            }
-            else
-            {
-              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                "Failed to add OPC UA node for location %s.%s, error code = 0x%x",
-                locationCountryCode.c_str(), locationName.c_str(), addResult);
-            }
-          }
-        }).wait();
+    if (currentLocationsNumber != parseMapSize) {
+      std::cout << "Locations number parameter for this country doesn't match with actual JSON parse. Validating the model..." << std::endl;
+      if (validateLocationsNumberInTheModel(*server, country, parseMapSize)) {
+        country.setLocationsNumber(parseMapSize);
+        std::cout << "Validation successful. New locations number: " << parseMapSize << std::endl;
+      }
+      else {
+        std::cout << "Validation failed. Keeping current number." << std::endl;
+      }
     }
-    catch (const std::exception & e) { //TODO - catch more specific type of exception
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestLocations method: [%s]", e.what());
+
+    // Note that both itLocation and location variables are used as reference to the original object, not copy.
+    // Therefore changes apply to originals.
+    for (auto& itLocation : country.getLocations()) {
+      auto& location = itLocation.second;
+      std::string locationName = location.getName();
+      std::string locationCity = location.getCity();
+      std::string locationCountryCode = location.getCountryCode();
+      /* Creates the identifier for the node id of the new Location object
+      The identifier for the node id of every location object will be: Countries.CountryCode.LocationName */
+      std::string countries{ CountryData::COUNTRIES_FOLDER_NODE_ID };
+      std::string locationObjNameId =
+        static_cast<std::string>(CountryData::COUNTRIES_FOLDER_NODE_ID)
+        + "." + locationCountryCode + "." + locationName;
+      /* Creates an Location object node containing all the weather information related to it. */
+      UA_NodeId locationObjId = UA_NODEID_STRING(WebService::OPC_NS_INDEX, const_cast<char*>(locationObjNameId.c_str()));
+      UA_ObjectAttributes locationObjAttr = UA_ObjectAttributes_default;
+      char locale[] = "en-US";
+      char desc[] = "Location object containing weather information";
+      locationObjAttr.description = UA_LOCALIZEDTEXT(locale, desc);
+      locationObjAttr.displayName = UA_LOCALIZEDTEXT(locale, const_cast<char*>(locationName.c_str()));
+
+      auto addResult = UA_Server_addObjectNode(server, locationObjId, parentCountryNodeId,
+        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        UA_QUALIFIEDNAME(WebService::OPC_NS_INDEX, const_cast<char*>(locationName.c_str())),
+        UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), locationObjAttr, NULL, NULL);
+      if (addResult == UA_STATUSCODE_GOOD) {
+        std::string flagInitializeVarNameId = locationObjNameId + "." + LocationData::BROWSE_FLAG_INITIALIZE;
+        UA_NodeId flagInitializeVarNodeId = UA_NODEID_STRING(WebService::OPC_NS_INDEX, const_cast<char*>(flagInitializeVarNameId.c_str()));
+        UA_VariableAttributes flagInitializeVarAttr = UA_VariableAttributes_default;
+        UA_Boolean flagInitializeValue = true;
+        UA_Variant_setScalar(&flagInitializeVarAttr.value, &flagInitializeValue, &UA_TYPES[UA_TYPES_BOOLEAN]);
+        char flagInitializeAttrDesc[] = "Auxiliary variable to indicate when to download weather data for this location.";
+        flagInitializeVarAttr.description = UA_LOCALIZEDTEXT(locale, flagInitializeAttrDesc);
+        flagInitializeVarAttr.displayName = UA_LOCALIZEDTEXT(locale, LocationData::BROWSE_FLAG_INITIALIZE);
+        auto addVariableResult = UA_Server_addVariableNode(server, flagInitializeVarNodeId, locationObjId,
+          UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+          UA_QUALIFIEDNAME(WebService::OPC_NS_INDEX, LocationData::BROWSE_FLAG_INITIALIZE),
+          UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), flagInitializeVarAttr, NULL, NULL);
+        if (addVariableResult != UA_STATUSCODE_GOOD) {
+          UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+            "Failed to add OPC UA node for variable %s.%s.%s, error code = 0x%x",
+            locationCountryCode.c_str(), locationName.c_str(), flagInitializeVarNameId.c_str(), addResult);
+        }
+        location.setIsInitialized(true);
+      }
+      else {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+          "Failed to add OPC UA node for location %s.%s, error code = 0x%x",
+          locationCountryCode.c_str(), locationName.c_str(), addResult);
+      }
     }
   }
 

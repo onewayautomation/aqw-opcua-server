@@ -33,11 +33,11 @@ namespace weatherserver {
 
     @param countryCode - two letter ISO code that represents the country.
     @param limit - number of locations to be returned. Default = 100 and max = 10000.
-    @return task for JSON array value containing all location data objects.
+    @return JSON array value containing all location data objects.
 
     Check the LocationData class to see the JSON representation.
     */
-    pplx::task<web::json::value> fetchAllLocations(const std::string& countryCode, const uint32_t limit = 100);
+    web::json::value fetchAllLocations(const std::string& countryCode, const uint32_t limit = 100);
 
     /*
     Makes http requests to Dark Sky API to fetch weather data for a specific location specified by latitude and longitude.

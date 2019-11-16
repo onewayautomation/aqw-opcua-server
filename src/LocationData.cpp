@@ -75,7 +75,7 @@ namespace weatherserver {
         auto location = jsonArray[i];
         LocationData locationData = LocationData::parseJson(location);
 
-        //Only add the location to the vector if it has valid coordinates.
+        //Only add the location to the map if it has valid coordinates.
         if (locationData.getLatitude() != LocationData::INVALID_LATITUDE
           && locationData.getLongitude() != LocationData::INVALID_LONGITUDE)
           allLocations[locationData.name] = locationData;
