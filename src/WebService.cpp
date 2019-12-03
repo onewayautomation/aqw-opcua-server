@@ -17,7 +17,7 @@ namespace weatherserver {
   const std::string WebService::PARAM_VALUE_API_DARKSKY_HOURLY = "hourly";
   const std::string WebService::PARAM_VALUE_API_DARKSKY_DAILY = "daily";
 
-  WebService::WebService(const Settings& settingsObj)
+  WebService::WebService(std::shared_ptr<Settings> settingsObj)
     : settings(settingsObj) {}
 
   pplx::task<web::json::value> WebService::fetchAllCountries() {
@@ -26,7 +26,9 @@ namespace weatherserver {
     uriBuilder.append_path(PATH_API_OPENAQ_COUNTRIES);
 
     //something like https://api.openaq.org/v1/countries inside - can open in the browser to check the data we are about to GET
-    web::http::client::http_client client(uriBuilder.to_string());
+    web::http::client::http_client_config config;
+    config.set_validate_certificates(true); // TODO: certificate validation can be made configurable
+    web::http::client::http_client client(uriBuilder.to_string(), config);
 
     return client.request(web::http::methods::GET)
       .then([](web::http::http_response requestResponse)
@@ -102,10 +104,10 @@ namespace weatherserver {
       + "," + WebService::PARAM_VALUE_API_DARKSKY_DAILY;
 
     web::uri_builder uriBuilder(ENDPOINT_API_DARKSKY);
-    uriBuilder.append_path(settings.getKeyApiDarksky());
+    uriBuilder.append_path(settings->getKeyApiDarksky());
     uriBuilder.append_path(utility::conversions::to_string_t(coordinatesPath));
     uriBuilder.append_query(WebService::PARAM_API_DARKSKY_EXCLUDE, utility::conversions::to_string_t(excludeQuery));
-    uriBuilder.append_query(WebService::PARAM_API_DARKSKY_UNITS, settings.getUnits());
+    uriBuilder.append_query(WebService::PARAM_API_DARKSKY_UNITS, settings->getUnits());
 
     web::http::client::http_client client(uriBuilder.to_string());
 

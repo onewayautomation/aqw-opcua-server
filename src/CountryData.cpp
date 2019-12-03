@@ -33,17 +33,25 @@ namespace weatherserver {
     uint32_t locations = 0;
 
     try {
-      name = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
-      code = utility::conversions::to_utf8string(json.at(KEY_CODE).as_string());
-      cities = json.at(KEY_CITIES).as_integer();
-      locations = json.at(KEY_LOCATIONS).as_integer();
+      if (json.has_field(KEY_NAME))
+        name = utility::conversions::to_utf8string(json.at(KEY_NAME).as_string());
+      if (json.has_field(KEY_CODE))
+        code = utility::conversions::to_utf8string(json.at(KEY_CODE).as_string());
+      if (json.has_field(KEY_CITIES))
+        cities = json.at(KEY_CITIES).as_integer();
+      if (json.has_field(KEY_LOCATIONS))
+        locations = json.at(KEY_LOCATIONS).as_integer();
+      if (name.empty())
+        name = code;
     }
     catch (const web::json::json_exception & ex) {
+      auto stringValue = utility::conversions::to_utf8string(json.serialize());
       std::cout << "Exception caught while parsing JSON object with country data: " << ex.what() << std::endl
         << "name = " << name << std::endl
         << "code = " << code << std::endl
         << "cities = " << cities << std::endl
         << "locations = " << locations << std::endl;
+      std::cout << "Json value as text: " << stringValue << std::endl;
     }
 
     return CountryData(name, code, cities, locations);

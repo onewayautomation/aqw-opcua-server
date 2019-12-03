@@ -8,6 +8,7 @@
 #include "CountryData.h"
 #include "LocationData.h"
 #include "WeatherData.h"
+#include <memory>
 
 namespace weatherserver {
 
@@ -15,7 +16,7 @@ namespace weatherserver {
 
   public:
 
-    WebService(const Settings& settingsObj);
+    WebService(std::shared_ptr<Settings> settingsObj);
 
     // ########## Methods to fetch data from the APIs services.
 
@@ -52,7 +53,7 @@ namespace weatherserver {
     void setAllCountries(const std::map<std::string, CountryData>& allCountries);
 
     UA_Server* getServer() { return server; }
-    const Settings& getSettings() { return settings; }
+    std::shared_ptr<Settings> getSettings() { return settings; }
     std::map<std::string, CountryData>& getAllCountries() { return fetchedAllCountries; }
 
     //String constants for API services: endpoints, keys, paths, queries etc.
@@ -85,7 +86,7 @@ namespace weatherserver {
   private:
 
     UA_Server* server{ nullptr };
-    Settings settings;
+    std::shared_ptr<Settings> settings;
     std::map<std::string, CountryData> fetchedAllCountries;
   };
 }

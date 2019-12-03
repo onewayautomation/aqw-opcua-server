@@ -10,15 +10,14 @@
 
 #include "Settings.h"
 #include "WebService.h"
-
-
+#include <memory>
 
 //Global variables - be aware of them.
 
 //Service responsible for REST calls on the internet.
 weatherserver::WebService* webService;
-
 UA_Boolean running = true;
+std::shared_ptr<weatherserver::Settings> settings;
 
 static void stopHandler(int sig) {
   UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "received signal %d", sig);
@@ -166,7 +165,7 @@ namespace weatherserver {
           std::chrono::minutes intervalBetweenDownloads = std::chrono::duration_cast<std::chrono::minutes>(now - location.getReadLastTime());
 
           /* The weather data will be downloaded only for the first time or after a interval of minutes specified by the constant WebService::INTERVAL_DOWNLOAD_WEATHER_DATA. */
-          if (!(location.getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= webService->getSettings().getIntervalWeatherDataDownload()) {
+          if (!(location.getHasBeenReceivedWeatherData()) || intervalBetweenDownloads.count() >= webService->getSettings()->getIntervalWeatherDataDownload()) {
             try {
               webService->fetchWeather(location.getLatitude(), location.getLongitude()).then([&](web::json::value response)
                 {
@@ -176,10 +175,7 @@ namespace weatherserver {
                 }).wait();
             }
             catch (const std::exception & e) {
-              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-                "Error on requestWeather method!");
-              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-                e.what());
+              UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestWeather method: [%s]", e.what());
             }
           }
           updateWeatherVariable(*dataValue, location.getWeatherData(), weatherVariableName);
@@ -467,8 +463,25 @@ namespace weatherserver {
     uint32_t currentLocationsNumber = country.getLocationsNumber();
 
     auto response = webService->fetchAllLocations(country.getCode(), currentLocationsNumber);
+    auto& locations = LocationData::parseJsonArray(response);
 
-    country.setLocations(LocationData::parseJsonArray(response));
+    // Add location from configuration file:
+    int numberOfAddedLocations = 0;
+    auto configuredLocations = settings->getLocations(country.getCode());
+    for (auto li = configuredLocations.begin(); li != configuredLocations.end(); li++)
+    {
+      if (locations.find(li->first) == locations.end())
+      {
+        locations[li->first] = li->second;
+        numberOfAddedLocations++;
+      }
+    }
+
+    if (numberOfAddedLocations > 0)
+    {
+      std::cout << "Country " << country.getCode() << " (" << country.getName() << ") : added " << numberOfAddedLocations << " locations from configuration file" << std::endl;
+    }
+    country.setLocations(locations);
 
     uint32_t parseMapSize = (uint32_t)country.getLocations().size();
 
@@ -548,6 +561,22 @@ namespace weatherserver {
         webService->setAllCountries(CountryData::parseJsonArray(response));
         auto& countries = webService->getAllCountries();
 
+        // Add countries from configuration file is it does not exist in the list:
+        int numberOfAddedCountries = 0;
+        auto countriesFromSettings= settings->getCountries();
+        for (auto iter = countriesFromSettings.begin(); iter != countriesFromSettings.end(); iter++)
+        {
+          auto existingEntry = countries.find(iter->first);
+          if (existingEntry == countries.end())
+          {
+            countries[iter->first] = iter->second;
+            numberOfAddedCountries++;
+          }
+        }
+        if (numberOfAddedCountries > 0)
+        {
+          std::cout << "Added " << numberOfAddedCountries << " from configuration file" << std::endl;
+        }
         for (auto itCountry = countries.begin(); itCountry != countries.end(); itCountry++) {
           auto& country = itCountry->second;
           std::string countryName = country.getName();
@@ -629,10 +658,7 @@ namespace weatherserver {
         }).wait();
     }
     catch (const std::exception & e) { //TODO - catch more specific type of exception
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        "Error on requestCountries method!");
-      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK,
-        e.what());
+      UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_NETWORK, "Error on requestCountries method: [%s]",  e.what());
     }
   }
 
@@ -770,6 +796,7 @@ namespace weatherserver {
   }
 }
 
+
 int main(int argc, char* argv[]) {
 
   std::string settingsPath;
@@ -792,17 +819,17 @@ int main(int argc, char* argv[]) {
     Attempt to open "settings.json" file to get Dark Sky API key and other settings to override dafault values.
     If there is a problem opening file, parsing or Dark Sky API key seems to be invalid - terminate the program.
   */
-  weatherserver::Settings settings(settingsPath);
-  if (!settings.areValid()) {
+  settings.reset(new weatherserver::Settings(settingsPath));
+  if (!settings->areValid()) {
     std::cout << "Invalid settings. Terminating..." << std::endl;
     return EXIT_FAILURE;
   }
 
   weatherserver::WebService ws(settings);
 
-  custom_port_number = settings.port_number;
-  if (!settings.endpointUrl.empty())
-    custom_endpoint_url = settings.endpointUrl.c_str();
+  custom_port_number = settings->port_number;
+  if (!settings->endpointUrl.empty())
+    custom_endpoint_url = settings->endpointUrl.c_str();
 
   webService = &ws;
 
@@ -811,8 +838,8 @@ int main(int argc, char* argv[]) {
 
   UA_ServerConfig* config = UA_ServerConfig_new_default();
 
-  if (!settings.hostName.empty()) {
-    UA_String ourHostName = UA_String_fromChars(settings.hostName.c_str());
+  if (!settings->hostName.empty()) {
+    UA_String ourHostName = UA_String_fromChars(settings->hostName.c_str());
     UA_ServerConfig_set_customHostname(config, ourHostName);
     UA_String_deleteMembers(&ourHostName);
   }

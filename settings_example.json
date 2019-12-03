@@ -13,5 +13,33 @@
     "api_key": "PUT YOUR API KEY FROM DARK SKY HERE",
     "param_units": "si",
     "interval_download": 15
-  }
+  },
+  "countries": [
+    {
+      "code": "RU",
+      "name": "Russian Federation",
+      "locations": [
+        {
+          "name": "Bornash",
+          "latitude": 55.242706,
+          "longitude": 48.768492
+        },
+        {
+          "name": "Apastovo",
+          "latitude": 55.194904,
+          "longitude": 48.528360
+        },
+        {
+          "name": "Kazan",
+          "latitude": 55.758541,
+          "longitude": 49.238427
+        },
+        {
+          "name": "Novosibirsk",
+          "latitude": 55.027971,
+          "longitude": 82.928661
+        }
+      ]
+    }
+  ]
 }

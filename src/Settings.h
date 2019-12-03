@@ -4,6 +4,8 @@
 #include <iostream>
 
 #include <cpprest/http_client.h>
+#include "CountryData.h"
+#include "LocationData.h"
 
 namespace weatherserver {
 
@@ -34,7 +36,8 @@ namespace weatherserver {
     int port_number;
     std::string endpointUrl;
     std::string hostName;
-
+    std::map<std::string, CountryData>& getCountries();
+    std::map<std::string, LocationData>& getLocations(const std::string& countryCode);
   private:
 
     /*
@@ -53,5 +56,8 @@ namespace weatherserver {
     utility::string_t units;
     int intervalWeatherDataDownload;
     bool settingsAreValid = false;
+
+    std::map<std::string, CountryData> countries;
+    std::map<std::string, std::map<std::string, LocationData>> locations;
   };
 }
