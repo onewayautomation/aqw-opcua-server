@@ -453,17 +453,20 @@ namespace weatherserver {
   }
 
   /*
-  Request locations from the web service for the specified "country". Add them as ObjectNodes to the OPC UA information model.
-  Add VariableNode with "initialized" flag for them.
+  Build locations list for the specified "country". Two potential sources:
+    - (primary) web service request to Open AQ API;
+    - (optional) settings file.
+
+  Add all those locations as ObjectNodes to the OPC UA information model and add VariableNode with "initialized" flag for them.
 
   @param parentCountryNodeId - nodeId for our "country". We use it as a parent for all locations in OPC UA model.
   */
-  static void requestLocations(UA_Server* server, CountryData& country, const UA_NodeId& parentCountryNodeId) {
+  static void buildLocations(UA_Server* server, CountryData& country, const UA_NodeId& parentCountryNodeId) {
 
     uint32_t currentLocationsNumber = country.getLocationsNumber();
 
-    auto response = webService->fetchAllLocations(country.getCode(), currentLocationsNumber);
-    auto& locations = LocationData::parseJsonArray(response);
+    web::json::value response = webService->fetchAllLocations(country.getCode(), currentLocationsNumber);
+    auto locations = LocationData::parseJsonArray(response);
 
     // Add location from configuration file:
     int numberOfAddedLocations = 0;
@@ -561,7 +564,7 @@ namespace weatherserver {
         webService->setAllCountries(CountryData::parseJsonArray(response));
         auto& countries = webService->getAllCountries();
 
-        // Add countries from configuration file is it does not exist in the list:
+        // Add countries from configuration file if it does not exist in the list:
         int numberOfAddedCountries = 0;
         auto countriesFromSettings= settings->getCountries();
         for (auto iter = countriesFromSettings.begin(); iter != countriesFromSettings.end(); iter++)
@@ -734,7 +737,7 @@ namespace weatherserver {
             // Only download locations if they don't exist and the country has been initialized (added to the address space).
             if (country.getIsInitialized()) {
               if (country.getLocations().size() == 0)
-                requestLocations(webService->getServer(), country, countryObjId);
+                buildLocations(webService->getServer(), country, countryObjId);
 
               // Only try to download weather data if locations has been added to the country being read.
               if (country.getLocations().size() > 0) {
