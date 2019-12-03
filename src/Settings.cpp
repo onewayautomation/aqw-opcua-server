@@ -9,18 +9,6 @@ namespace weatherserver {
   const utility::string_t Settings::PARAM_NAME_API_DARKSKY_UNITS = U("param_units");
   const utility::string_t Settings::PARAM_NAME_API_DARKSKY_INTERVAL_DOWNLOAD_WEATHER_DATA = U("interval_download");
 
-
-  std::map<std::string, weatherserver::CountryData>& Settings::getCountries()
-  {
-    return countries;
-  }
-
-
-  std::map<std::string, weatherserver::LocationData>& Settings::getLocations(const std::string& countryCode)
-  {
-    return locations[countryCode];
-  }
-
   Settings::Settings(const std::string& settingsFilePath) {
     keyApiDarksky = U("");
     units = U("si");
@@ -79,7 +67,7 @@ namespace weatherserver {
               for (size_t l = 0; l < locationsField.as_array().size(); l++)
               {
                 std::map<std::string, LocationData> locationsMap;
-                
+
                 std::string locationName;
                 std::string city;
                 std::string countryCode;

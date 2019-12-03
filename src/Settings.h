@@ -25,6 +25,10 @@ namespace weatherserver {
     const utility::string_t& getKeyApiDarksky() const { return keyApiDarksky; }
     const utility::string_t& getUnits() const { return units; }
     int getIntervalWeatherDataDownload() const { return intervalWeatherDataDownload; }
+    const std::map<std::string, CountryData>& getCountries() const { return countries; }
+
+    //this call will perform an insertion if countryCode key is not found!
+    const std::map<std::string, LocationData>& getLocations(const std::string& countryCode) { return locations[countryCode]; }
 
     static const utility::string_t OPC_UA_SERVER;
     static const utility::string_t API_OPENAQ;
@@ -36,8 +40,7 @@ namespace weatherserver {
     int port_number;
     std::string endpointUrl;
     std::string hostName;
-    std::map<std::string, CountryData>& getCountries();
-    std::map<std::string, LocationData>& getLocations(const std::string& countryCode);
+
   private:
 
     /*
@@ -57,6 +60,7 @@ namespace weatherserver {
     int intervalWeatherDataDownload;
     bool settingsAreValid = false;
 
+    //Countries and locations that were passed through settings file.
     std::map<std::string, CountryData> countries;
     std::map<std::string, std::map<std::string, LocationData>> locations;
   };
