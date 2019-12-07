@@ -1,0 +1,43 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+    
+    name: CMake build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: installing cpprestsdk
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            vcpkg install cpprestsdk:x64-windows
+          else
+            vcpkg install cpprestsdk
+          fi
+          
+      - name: cmake build
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          
+          export VCPKG_ARG=-DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cmake $VCPKG_ARG -G "Visual Studio 16 2019" -A "x64" ..
+            cmake --build . --config "Release"
+          else
+            cmake $VCPKG_ARG -DCMAKE_BUILD_TYPE=Release ..
+            cmake --build .
+          fi
