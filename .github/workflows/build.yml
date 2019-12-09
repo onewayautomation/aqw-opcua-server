@@ -1,11 +1,15 @@
-name: C/C++ CI
+name: C/C++ CI (build)
 
 on:
   push:
     branches: 
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
+
   build:
     
     name: CMake build on ${{ matrix.os }}
@@ -17,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: installing cpprestsdk
+      - name: Installing cpprestsdk
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then
@@ -26,7 +30,7 @@ jobs:
             vcpkg install cpprestsdk
           fi
           
-      - name: cmake build
+      - name: Building with CMake
         shell: bash
         run: |
           mkdir build
