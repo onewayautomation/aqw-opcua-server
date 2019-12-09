@@ -1,0 +1,123 @@
+name: C/C++ CI (release)
+
+on:
+  #using this workflow just for release events when we are pushing release tag (v*)
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  #workaround to avoid multiple release creations at build stage
+  #using separate job and saving output URL to a file
+  #we assume builds going to be successful (should be ok with build.yml trigger on push/pr to master)
+  release:
+
+    if: contains(github.ref, 'tags/v')
+    name: Creating GitHub release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Creating release
+      id: create-release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Output release URL to file
+      shell: bash
+      run: echo "${{ steps.create-release.outputs.upload_url }}" > release_url.txt
+      
+    - name: Save release URL for later use
+      uses: actions/upload-artifact@v1
+      with:
+        name: release_url
+        path: release_url.txt
+
+  #TODO: order should be: build > release > publish
+  #may work out if we split build and publish parts
+  #and transfer release assets through upload/download artifact scripts
+  build:
+    
+    if: contains(github.ref, 'tags/v')
+    needs: [release]
+    name: CMake build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    
+    steps:
+      - uses: actions/checkout@v1
+        
+      - name: Installing cpprestsdk
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            vcpkg install cpprestsdk:x64-windows
+          else
+            vcpkg install cpprestsdk
+          fi
+          
+      - name: Building with CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          export VCPKG_ARG=-DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cmake $VCPKG_ARG -G "Visual Studio 16 2019" -A "x64" ..
+            cmake --build . --config "Release"
+          else
+            cmake $VCPKG_ARG -DCMAKE_BUILD_TYPE=Release ..
+            cmake --build .
+          fi
+          
+      - name: Creating release asset
+        id: create-asset
+        shell: bash
+        run: |
+          version=${TAG_REF_NAME##*/v}
+          file_name='release-'${version}'-'${{ matrix.os }}
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pushd ./build/bin/Release
+            7z a -tzip ../../../${file_name}.zip ./
+            popd
+          else
+            pushd ./build/bin
+            7z a -tzip ../../${file_name}.zip ./
+          popd
+          fi
+          echo ::set-output name=output_file_name::${file_name}
+        env:
+          TAG_REF_NAME: ${{ github.ref }}
+         
+      - name: Loading file with release URL #created in release job
+        uses: actions/download-artifact@v1
+        with:
+          name: release_url
+          
+      - name: Extracting URL
+        id: get-url
+        shell: bash
+        run: |
+          url_value=$(cat release_url/release_url.txt)
+          echo ::set-output name=upload_url::$url_value
+        env:
+          TAG_REF_NAME: ${{ github.ref }}
+        
+      - name: Uploading release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get-url.outputs.upload_url }}
+          asset_path: ./${{ steps.create-asset.outputs.output_file_name }}.zip
+          asset_name: ${{ steps.create-asset.outputs.output_file_name }}.zip
+          asset_content_type: application/zip
