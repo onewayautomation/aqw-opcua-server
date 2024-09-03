@@ -98,7 +98,7 @@ jobs:
           TAG_REF_NAME: ${{ github.ref }}
          
       - name: Loading file with release URL #created in release job
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4.1.7
         with:
           name: release_url
           
